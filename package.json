@@ -2,11 +2,25 @@
   "name": "spinal-env-viewer-plugin-opcua-manager",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "dependencies": {
+    "spinal-connector-service": "git+https://github.com/spinalcom/spinal-connector-service.git",
+    "spinal-env-viewer-context-menu-service": "git+https://github.com/spinalcom/spinal-env-viewer-context-menu-service.git",
+    "spinal-env-viewer-graph-service": "git+https://github.com/spinalcom/Spinal-Graph-Service.git",
+    "spinal-model-bmsnetwork": "git+https://github.com/spinalcom/spinal-model-bmsnetwork.git",
+    "spinal-model-opcua": "git+https://github.com/spinalcom/spinal-model-opcua.git"
+  },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "browserify": {
+    "transform": [
+      "vueify",
+      "babelify",
+      "imgurify"
+    ]
+  }
 }
