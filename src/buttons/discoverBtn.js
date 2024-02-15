@@ -4,6 +4,8 @@ const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-s
 import { OPCUA_ORGAN_TYPE } from "spinal-model-opcua";
 import { SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 import { DISCOVER_OPCUA_PANEL, SIDEBAR } from "../constants";
+import utilities from "../js/utilities";
+
 
 class DiscoverOPCUABtn extends SpinalContextApp {
     constructor() {
@@ -33,7 +35,12 @@ class DiscoverOPCUABtn extends SpinalContextApp {
     }
 
     action(option) {
-        spinalPanelManagerService.openPanel(DISCOVER_OPCUA_PANEL, option);
+        const param = {
+            graph: option.graph,
+            context: SpinalGraphService.getRealNode(option.context.id.get()),
+            selectedNode: SpinalGraphService.getRealNode(option.selectedNode.id.get()),
+        }
+        spinalPanelManagerService.openPanel(DISCOVER_OPCUA_PANEL, param);
     }
 }
 
