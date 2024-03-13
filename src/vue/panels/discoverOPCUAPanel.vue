@@ -135,7 +135,7 @@
 </template>
 
 <script>
-import { DISCOVER_OPCUA_PANEL } from "../../constants";
+import { DISCOVER_OPCUA_PANEL } from "../../js/constants";
 import {
   OPCUA_ORGAN_STATES,
   SpinalOPCUADiscoverModel,
@@ -444,9 +444,16 @@ export default {
     }
   }
 }
+
+
 </style>
 
 <style lang="scss">
+
+._panel_container * {
+  box-sizing: border-box !important;
+}
+
 ._panel_container {
   .stepper_container {
     .md-steppers-wrapper {

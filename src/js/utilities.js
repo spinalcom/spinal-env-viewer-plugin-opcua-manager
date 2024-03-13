@@ -1,5 +1,5 @@
-import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
-import { SpinalGraphService } from "spinal-env-viewer-graph-service";
+import { SpinalBmsDevice, SpinalBmsEndpoint, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
+import { SpinalGraph, SpinalGraphService } from "spinal-env-viewer-graph-service";
 
 
 export default class Utils {
@@ -42,21 +42,49 @@ export default class Utils {
             });
     }
 
-    static getOrgan(networkId, contextId) {
-        const realNode = SpinalGraphService.getRealNode(networkId);
-        return realNode
-            .getParents([SpinalBmsNetwork.relationName])
-            .then((parents) => {
-                const found = parents.find((el) => {
-                    if (el && el.contextIds) {
-                        return el.contextIds[contextId];
-                    }
-                });
+    static async getOrgan(networkId, contextId) {
+        const node = SpinalGraphService.getRealNode(networkId);
+        const context = SpinalGraphService.getRealNode(contextId);
 
-                if (found) {
-                    return found.getElement();
-                }
-            });
+        if (!node.belongsToContext(context)) return;
+
+        const organs = await SpinalGraphService.getChildrenInContext(contextId, contextId);
+
+        for (const organ of organs) {
+            const exist = await this.existInTree(contextId, organ.id.get(), networkId);
+            if (exist) return SpinalGraphService.getRealNode(organ.id.get());
+        }
+
+        // const realNode = SpinalGraphService.getRealNode(networkId);
+        // return realNode
+        //     .getParents([SpinalBmsNetwork.relationName])
+        //     .then((parents) => {
+        //         const found = parents.find((el) => {
+        //             if (el && el.contextIds) {
+        //                 return el.contextIds[contextId];
+        //             }
+        //         });
+
+        //         if (found) {
+        //             return found.getElement();
+        //         }
+        //     });
+    }
+
+    static async findNetwork(organId, contextId, nodeId) {
+        const organ = SpinalGraphService.getRealNode(organId);
+        const context = SpinalGraphService.getRealNode(contextId);
+        const node = SpinalGraphService.getRealNode(nodeId);
+        if (!node.belongsToContext(context) || !organ.belongsToContext(context)) return;
+
+
+        const networks = await organ.getChildrenInContext(context);
+
+        for (const network of networks) {
+            const exist = await this.existInTree(contextId, network.getId().get(), nodeId);
+            if (exist) return network;
+        }
+
     }
 
 
@@ -84,5 +112,41 @@ export default class Utils {
             index = endIndex;
         }
         return result;
+    }
+
+    static async existInTree(contextId, startId, nodeToFindId) {
+        let queue = await SpinalGraphService.getChildrenInContext(startId, contextId)
+        let exist = false;
+
+        while (queue.length > 0 && !exist) {
+            let found = queue.find((el) => el.id.get() === nodeToFindId);
+            if (found) exist = true;
+            else {
+                const promises = queue.map(el => SpinalGraphService.getChildrenInContext(el.id.get(), contextId));
+                const children = await Promise.all(promises);
+                queue = children.flat();
+            }
+        }
+
+        return exist
+    }
+
+    static browseEndpoints(node, context, callback) {
+        let endpoints = [];
+        
+        try {
+           return node.findInContext(context, (n) => {
+               if (n.getType().get() === SpinalBmsEndpoint.nodeTypeName) {
+                    if (typeof callback === "function") callback(n);
+                    endpoints.push(n);
+                    return true;
+                }
+
+                return false;
+            }) 
+        } catch (error) {
+            return endpoints;
+        }
+               
     }
 }
