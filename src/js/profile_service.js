@@ -29,7 +29,7 @@ class OPCUAProfileService {
 
     constructor() {
         this.context = null;
-     }
+    }
 
     async init() {
         this.context = await this.getContext(true);

@@ -10,6 +10,7 @@
     "@syncfusion/ej2-vue-grids": "^24.2.3",
     "@syncfusion/ej2-vue-navigations": "^24.2.4",
     "primevue": "^3.48.0",
+    "lodash": "^4.17.20",
     "spinal-connector-service": "git+https://github.com/spinalcom/spinal-connector-service.git",
     "spinal-env-viewer-context-menu-service": "git+https://github.com/spinalcom/spinal-env-viewer-context-menu-service.git",
     "spinal-env-viewer-graph-service": "git+https://github.com/spinalcom/Spinal-Graph-Service.git",

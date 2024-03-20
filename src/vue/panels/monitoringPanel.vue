@@ -12,6 +12,11 @@
       <md-button class="md-icon-button md-primary"  @click="restartAll">
         <md-icon>restart_alt</md-icon>
       </md-button>
+
+        <md-button class="md-primary" @click="() => changeAllTimeSeries(true)">Save all time series </md-button>
+
+        <md-button class="md-accent" @click="() => changeAllTimeSeries(false)">Stop saving all time series</md-button>
+
     </div>
 
     <md-list class="listDiv md-double-line">
@@ -34,6 +39,14 @@
           <md-button class="md-icon-button md-primary" :disabled="disableBtn(Button_names.restart, device.id)" @click="() => restart(device.id)">
             <md-icon>restart_alt</md-icon>
           </md-button>
+
+
+          <div class="block">
+            <div class="input">
+              <md-checkbox class="primary" :disabled="disableBtn(Button_names.checkbox, device.id)" :value="!getTimeSeriesValue(device.id)" @change="() => setTimeSeriesValue(device.id)">Save timeseries</md-checkbox>
+            </div>
+          </div>
+
         </div>
         
       </md-list-item>
@@ -48,7 +61,7 @@ import { SpinalOPCUAListener } from "spinal-model-opcua";
 import { SpinalBmsDevice, SpinalBmsNetwork } from 'spinal-model-bmsnetwork';
 import { SPINAL_RELATION_PTR_LST_TYPE } from "spinal-model-graph";
 import opcuaProfileService, { CONTEXT_TO_PROFILE_RELATION } from '../../js/profile_service';
-
+import * as lodash from "lodash"
 
 export default {
   name: MONITORING_PANEL_NAME,
@@ -68,7 +81,8 @@ export default {
     this.Button_names = {
       start : 1,
       stop : 2,
-      restart : 3
+      restart : 3,
+      checkbox : 4
     }
 
     this.STEPS = Object.freeze({
@@ -79,6 +93,7 @@ export default {
 
     this.nodes = {};
     this.listeners = {};
+    this.updateInterface = lodash.debounce(() => this.$forceUpdate(), 100);
 
     return {
       state: this.STATES.loading,
@@ -102,7 +117,7 @@ export default {
       const listener = this.listeners[deviceId];
       if(listener) {
         listener.monitored.set(true);
-        if(!globalUpdate) this.$forceUpdate()
+        if(!globalUpdate) this.updateInterface()
         return;
       }
 
@@ -111,18 +126,18 @@ export default {
 
       if(!profile) return;
 
-      let model = new SpinalOPCUAListener(this.graph,this.context, this.organ, this.network, node, profile);
+      let model = new SpinalOPCUAListener(this.graph,this.context, this.organ, this.network, node, profile, true);
       await model.addToDevice();
 
       this.listeners[deviceId] = model;
-      if(!globalUpdate) this.$forceUpdate()
+      if(!globalUpdate) this.updateInterface()
     },
 
     stop(deviceId, globalUpdate) {
       const listener = this.listeners[deviceId];
       
       if(listener) {
-        if(!globalUpdate) this.$forceUpdate()
+        if(!globalUpdate) this.updateInterface()
         listener.monitored.set(false);
       }
 
@@ -166,6 +181,9 @@ export default {
       const listener = this.listeners[nodeId];
 
       switch (button) {
+        case this.Button_names.checkbox:
+          return !listener ? true : false;
+          
         case this.Button_names.start:
           if(listener && listener.monitored && listener.monitored.get()) return true;
           return false;
@@ -202,11 +220,68 @@ export default {
       return listener && listener.monitored && listener.monitored.get() ? "Monitored" : "Stopped";
     },
 
-    startAll() {},
+    async startAll() {
+      const globalUpdate = true;
+      
+      for (const device of this.devices) {
+        await this.start(device.id, globalUpdate);
+        this.updateInterface()
+      }
 
-    stopAll() {},
+    },
 
-    restartAll() {},
+    stopAll() {
+      const globalUpdate = true;
+      
+      for (const device of this.devices) {
+        this.stop(device.id, globalUpdate);
+      }
+
+      this.updateInterface()
+    },
+
+    async restartAll() {
+      const globalUpdate = true;
+      
+      for (const device of this.devices) {
+        await this.restart(device.id, globalUpdate);
+        this.updateInterface()
+      }
+    },
+
+    changeAllTimeSeries(value) {
+
+      for (const device of this.devices) {
+        const listener = this.listeners[device.id];
+
+        if(listener && listener.saveTimeSeries) {
+          listener.saveTimeSeries.set(value);
+        }
+      }
+
+      this.updateInterface();
+
+    },
+
+    getTimeSeriesValue(deviceId) {
+      console.log("getting value")
+      const listener = this.listeners[deviceId];
+      if(!listener) return false;
+
+      return listener.saveTimeSeries && listener.saveTimeSeries.get() || false;
+    },
+
+    setTimeSeriesValue(deviceId) {
+      const listener = this.listeners[deviceId];
+
+      if(listener && listener.saveTimeSeries) {
+        const value = !listener.saveTimeSeries.get()
+        listener.saveTimeSeries.set(value);
+      }
+
+      this.updateInterface();
+
+    }
 
   },
   
@@ -264,5 +339,9 @@ export default {
 <style>
 ._panel_container  * {
   box-sizing: border-box !important;
+}
+
+._panel_container .md-list-action {
+  display: contents;
 }
 </style>

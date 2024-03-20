@@ -30,6 +30,12 @@
               <label>OPCUA Server port</label>
               <md-input type="number" v-model="serverInfo.port"></md-input>
             </md-field>
+
+            <md-field>
+              <label>url endpoint</label>
+              <md-input v-model="serverInfo.endpoint"></md-input>
+            </md-field>
+
           </div>
 
           <md-button
@@ -170,10 +176,18 @@ export default {
       // treeFields: { dataSource: [], id: 'nodeId', parentID: 'parentId', text: 'displayName', hasChildren: 'hasChild' },
       treeFields: [],
       checkedNodes: [],
+      // serverInfo: {
+      //   name: "Server WBOX",
+      //   ip: "10.10.0.11",
+      //   port: 26543,
+      //   endpoint : ""
+      // },
+
       serverInfo: {
-        name: "Server WBOX",
-        ip: "10.10.0.11",
-        port: 26543,
+        name: "Server Local",
+        ip: "spinalcom",
+        port: 5011,
+        endpoint : "/IcoFwxServer"
       },
     };
   },
