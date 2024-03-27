@@ -66,7 +66,7 @@ import * as lodash from "lodash"
 export default {
   name: MONITORING_PANEL_NAME,
   data() {
-
+    
     this.context;
     this.graph;
     this.organ;
