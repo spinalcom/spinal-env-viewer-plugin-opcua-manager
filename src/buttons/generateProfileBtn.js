@@ -9,7 +9,7 @@ import { SpinalBmsDevice } from "spinal-model-bmsnetwork";
 
 class GenerateProfile extends SpinalContextApp {
     constructor() {
-        super("Generate Profile", "This button allows to Generate opcua monitoring Profile", {
+        super("Generate OPCUA Profile", "This button allows to Generate opcua monitoring Profile", {
             icon: "auto_mode",
             icon_type: "in",
             backgroundColor: "#FF0000",
@@ -27,7 +27,6 @@ class GenerateProfile extends SpinalContextApp {
 
         const organ = organNode && await organNode.getElement(true);;
         return organ && organ.type.get() == OPCUA_ORGAN_TYPE ? true : -1;
-
 
         // return -1;
     }

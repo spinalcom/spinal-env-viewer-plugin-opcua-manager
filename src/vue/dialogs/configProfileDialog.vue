@@ -8,14 +8,36 @@
       Configure Monitoring profile
     </md-dialog-title>
 
-    <md-dialog-content>
+    <md-dialog-content class="dialogContent">
       <div v-if="state === STATES.loaded" class="loadedContent">
         <div class="list_div">
-          <!-- <div class="div_title">Endpoints List</div> -->
-          <md-list class="md-double-line">
-            <md-subheader>Endpoints list</md-subheader>
+
+          <div class="div_title endpoint_div_title">
+            <div class="name">
+              Endpoints list
+            </div>
+
+            <div class="action">
+              <md-field md-inline>
+                <label>Search...</label>
+                <md-input v-model="searchText"></md-input>
+                <md-icon>search</md-icon>
+              </md-field>
+
+              <md-button class="md-icon-button" title="select all" @click="selectAll">
+                <md-icon>select_all</md-icon>
+              </md-button>
+
+              <md-button class="md-icon-button" title="deselect all" @click="deselectAll">
+                <md-icon>deselect</md-icon>
+              </md-button>
+            </div>
+          </div>
+
+          <md-list class="md-double-line item_list" v-if="endpointsFiltered.length > 0">
+            <!-- <md-subheader>Endpoints list</md-subheader> -->
             <md-list-item
-              v-for="e in endpoints"
+              v-for="e in endpointsFiltered"
               :key="e.id"
               @click.stop="() => selectEndpoint(e)"
               class="listItem"
@@ -24,59 +46,29 @@
               @dragstart="() => dragItems(e.id)">
               <div class="md-list-item-text">
                 <span>{{ e.name }}</span>
-                <!-- <span>{{ e.idNetwork }}</span> -->
+                <span class="pathDiv">{{ e.path || "" }}</span>
               </div>
             </md-list-item>
           </md-list>
+
+          <div v-else class="loading">
+            <h3>No Item Found</h3>
+          </div>
         </div>
 
-        <div class="switchButtons">
+        <!-- <div class="switchButtons">
           <md-button
             class="md-icon-button md-raised md-primary"
             @click="addToInterList"
           >
             <md-icon>forward</md-icon>
           </md-button>
-
-          <!-- <md-menu
-            md-direction="bottom-start"
-            :md-active.sync="closeMenu"
-            :md-close-on-select="false"
-            :md-close-on-click="false"
-          >
-            <md-button
-              class="md-icon-button md-raised md-primary"
-              md-menu-trigger
-            >
-              <md-icon>add</md-icon>
-            </md-button>
-
-            <md-menu-content>
-              <div class="menuContainer">
-                <div class="menuTitle">Add interval</div>
-                <div class="menuContent">
-                  <div class="field">
-                    <md-field>
-                      <label>Interval time</label>
-                      <md-input></md-input>
-                    </md-field>
-                  </div>
-                </div>
-
-                <div class="menuAction">
-                  <md-button class="md-raised md-primary md-dense">
-                    OK
-                  </md-button>
-                </div>
-              </div>
-            </md-menu-content>
-          </md-menu> -->
-        </div>
+        </div> -->
 
         <div class="list_div">
-          <!-- <div class="div_title">Monitoring List</div> -->
+          <div class="div_title">Intervals list</div>
 
-          <md-list :md-expand-single="expandSingle">
+          <md-list :md-expand-single="expandSingle" class="item_list">
             <md-list-item
               md-expand
               v-for="interval in intervalsList"
@@ -151,6 +143,7 @@ import { CONFIG_MONITORING_PROFILE_DIALOG } from "../../js/constants";
 import { SpinalBmsEndpoint } from "spinal-model-bmsnetwork";
 import AddIntervalDialog from "./addIntervalDialog.vue";
 import opcuaProfileService from '../../js/profile_service';
+import * as lodash from "lodash";
 
 const defaultIntervals = [
     { name: "30s", value: 30000, items: [] },
@@ -176,16 +169,19 @@ export default {
     
     this.old_endpoints = {};
     this.old_intervals = {};
+    this.filterBounced = lodash.debounce(this.filterEndpoint.bind(this), 200);
 
     return {
       showDialog: true,
       state: this.STATES.loading,
-
+      searchText: "",
       context: null,
       selectedNode: null,
 
       endpoints: [],
       endpointSelectedList: [],
+      endpointsFiltered : [],
+
 
       intervalsList: defaultIntervals,
       intervalSelected: null,
@@ -194,6 +190,9 @@ export default {
       closeMenu: true,
       intervalToAdd: "",
     };
+  },
+  mounted(){
+    this.filterBounced();
   },
   methods: {
     async opened({ graph, context, selectedNode, organ }) {
@@ -438,16 +437,46 @@ export default {
       return intervals;
     },
 
-    
+    filterEndpoint() {
+      if(this.searchText.trim().length > 0) 
+        this.endpointsFiltered = this.endpoints.filter(el => el.name.toLowerCase().includes(this.searchText.trim().toLowerCase()));
+      else
+        this.endpointsFiltered = Object.assign([], this.endpoints);
+    },
 
+    selectAll() {
+      const ids = this.endpointsFiltered.map(el => el.id);
+      this.endpointSelectedList = [...this.endpointSelectedList, ...ids];
+    },
+
+    deselectAll() {
+      this.endpointSelectedList = [];
+    }
 
   },
+
+  watch : {
+    searchText() {
+      this.filterBounced();
+    },
+
+    endpoints() {
+      this.filterBounced();
+    }
+
+  }
 };
 </script>
 
 <style lang="scss">
+$maxWith : 950px;
+
+.dialogContent {
+  max-width: $maxWith;
+}
+
 .configContainer {
-  width: 800px;
+  width: $maxWith;
   height: 600px;
 
   .title {
@@ -461,11 +490,12 @@ export default {
     justify-content: space-between;
 
     .list_div {
-      width: calc(50% - 30px);
+      // width: calc(50% - 30px);
+      width: 49%; 
       height: 100%;
       border: 1px solid grey;
       border-radius: 10px;
-      overflow: auto;
+      // overflow: auto;
 
       .div_title {
         width: 100%;
@@ -474,13 +504,31 @@ export default {
         align-items: center;
         justify-content: center;
         border-bottom: 1px solid grey;
+        padding: 0 5px;
       }
 
+      .div_title.endpoint_div_title {
+        display: flex;
+        justify-content: space-between !important;
+        .action {
+          display: flex;
+          align-items: center;
+        }
+      }
+
+      .item_list {
+        height: calc(100% - 50px);
+        overflow: auto;
+      }
+
+      
+
       .listItem {
-        height: 40px !important;
+        height: 50px !important;
         margin-bottom: 5px;
+
         .md-list-item-container {
-          height: 40px !important;
+          height: 50px !important;
         }
       }
     }
@@ -509,6 +557,11 @@ export default {
       min-height: unset !important;
       font-size: 0.9em;
     }
+  }
+
+  .pathDiv {
+    font-size: 0.8em;
+    margin-top: 3px;
   }
 }
 

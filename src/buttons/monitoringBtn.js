@@ -23,7 +23,7 @@ class MonitoringOPCUABtn extends SpinalContextApp {
         const id = option.selectedNode.id.get();
         const contextId = option.context.id.get();
 
-        if (typeSelected === OPCUA_ORGAN_TYPE) return true;
+        // if (typeSelected === OPCUA_ORGAN_TYPE) return true;
 
         if (typeSelected === SpinalBmsNetwork.nodeTypeName || typeSelected === SpinalBmsDevice.nodeTypeName) {
             const organNode = await utilities.getOrgan(id, contextId);

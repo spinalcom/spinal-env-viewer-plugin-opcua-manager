@@ -1,5 +1,6 @@
 import { SpinalBmsDevice, SpinalBmsEndpoint, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 import { SpinalGraph, SpinalGraphService } from "spinal-env-viewer-graph-service";
+import { OPCUA_ORGAN_TYPE } from "spinal-model-opcua/dist/constants";
 
 
 export default class Utils {
@@ -46,6 +47,8 @@ export default class Utils {
         const node = SpinalGraphService.getRealNode(networkId);
         const context = SpinalGraphService.getRealNode(contextId);
 
+        if(node.getType().get() === OPCUA_ORGAN_TYPE) return node;
+        
         if (!node.belongsToContext(context)) return;
 
         const organs = await SpinalGraphService.getChildrenInContext(contextId, contextId);

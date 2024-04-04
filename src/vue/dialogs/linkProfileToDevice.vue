@@ -11,14 +11,19 @@
     <md-dialog-content>
 
       <div v-if="state === STATES.loaded" class="loadedContent">
-        <md-list>
+        <md-list v-if="profiles.length > 0">
           <md-list-item 
               v-for="profile of profiles" :key="profile.id" 
               @click="() => selectProfile(profile.id)" 
               :class="{selected: profile.id === profileSelected}">
             {{ profile.name }}
           </md-list-item>
+
         </md-list>
+
+        <div v-else class="loading">
+          <h3>No Profile Found</h3>
+        </div>
 
       </div>
       

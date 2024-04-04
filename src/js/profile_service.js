@@ -63,6 +63,14 @@ class OPCUAProfileService {
 
     }
 
+    async unlinkProfileToDevice(devices) {
+        devices = Array.isArray(devices) ? devices : [devices];
+        
+        if (!this.context) await this.init();
+        const promises = devices.map(device => this._removeOldProfile(device));
+        return Promise.all(promises);
+    }
+
     async getProfiles() {
         if (!this.context) await this.init();
         return this.context.getChildren(CONTEXT_TO_PROFILE_RELATION);
@@ -219,7 +227,10 @@ class OPCUAProfileService {
 
         return items.map(item => {
             const node = new SpinalNode(item.name, ITEM_TYPE)
-            node.info.add_attr({ idNetwork : item.idNetwork });
+            node.info.add_attr({ 
+                idNetwork : item.idNetwork, 
+                path: item.path || ""
+            });
             return node;
         })
     }

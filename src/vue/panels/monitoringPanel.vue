@@ -213,7 +213,7 @@ export default {
     getState(nodeId) {
       const node = this.nodes[nodeId];
 
-      if(!node || !node.hasRelation(CONTEXT_TO_PROFILE_RELATION, SPINAL_RELATION_PTR_LST_TYPE)) return "No_profile";
+      if(!node || !node.hasRelation(CONTEXT_TO_PROFILE_RELATION, SPINAL_RELATION_PTR_LST_TYPE)) return "No_profile Linked";
       
       const listener = this.listeners[nodeId];
 

@@ -125,10 +125,12 @@ export default {
     };
   },
   methods: {
-    async opened(params) {
-      this.graph = params.graph;
-      this.context = params.context;
-      this.organ = await params.selectedNode.getElement(true);
+    async opened({graph, context, organ, serverInfo}) {
+      this.graph = graph;
+      this.context = context;
+      this.organ = await organ.getElement(true);
+      console.log("serverInfo", serverInfo);
+      if(serverInfo) this.serverInfo = serverInfo;
 
       if (typeof this.spinalDiscover !== "undefined") {
         this.spinalDiscover = undefined;
@@ -360,7 +362,7 @@ export default {
 @import url("https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons");
 </style>
 
-<style scoped lang="scss">
+<style lang="scss">
 ._panel_container {
   width: 100%;
   height: 100%;

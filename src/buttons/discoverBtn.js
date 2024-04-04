@@ -34,12 +34,25 @@ class DiscoverOPCUABtn extends SpinalContextApp {
         return -1;
     }
 
-    action(option) {
+    async action(option) {
+        const typeSelected = option.selectedNode.type.get();
+        let serverInfo;
+        let organ = SpinalGraphService.getRealNode(option.selectedNode.id.get());
+
+        if(typeSelected === SpinalBmsNetwork.nodeTypeName) {
+            const id = option.selectedNode.id.get();
+            const contextId = option.context.id.get();
+            serverInfo = option.selectedNode.serverInfo && option.selectedNode.serverInfo.get();
+            organ = await utilities.getOrgan(id, contextId);
+        }
+
         const param = {
             graph: option.graph,
             context: SpinalGraphService.getRealNode(option.context.id.get()),
-            selectedNode: SpinalGraphService.getRealNode(option.selectedNode.id.get()),
+            organ,
+            serverInfo
         }
+
         spinalPanelManagerService.openPanel(DISCOVER_OPCUA_PANEL, param);
     }
 }

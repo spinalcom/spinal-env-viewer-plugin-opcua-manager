@@ -8,7 +8,7 @@
       Generate OPCUA profile
     </md-dialog-title>
 
-    <md-dialog-content>
+    <md-dialog-content class="dialog_content">
 
       <md-field v-if="state === STATES.loaded">
         <label>name</label>
@@ -105,6 +105,12 @@ export default {
   height: 260px;
   .title {
     text-align: center;
+  }
+
+  .dialog_content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   
