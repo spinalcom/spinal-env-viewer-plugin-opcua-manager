@@ -120,7 +120,10 @@ class OPCUAProfileService {
         const itemListNode = await this.getItemListNode(profile);
         if (itemListNode) {
             const promises = itemsToRemove.map(node => itemListNode.removeChild(node, ITEM_LIST_TO_ITEM, SPINAL_RELATION_PTR_LST_TYPE));
-            return Promise.all(promises);
+            return Promise.all(promises).then((result) => {
+                profile.info.indirectModificationDate.set(Date.now());
+                return result;
+            })
         }
     }
 
@@ -130,7 +133,10 @@ class OPCUAProfileService {
         const itemListNode = await this.getItemListNode(profileNode);
         if (itemListNode) {
             const promises = itemsNodes.map(node => itemListNode.addChildInContext(node, ITEM_LIST_TO_ITEM, SPINAL_RELATION_PTR_LST_TYPE, this.context));
-            return Promise.all(promises);
+            return Promise.all(promises).then((result) => {
+                profileNode.info.indirectModificationDate.set(Date.now());
+                return result;
+            })
         }
     }
 

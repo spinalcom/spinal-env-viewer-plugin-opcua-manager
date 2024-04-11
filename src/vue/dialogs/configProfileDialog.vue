@@ -368,6 +368,7 @@ export default {
       return Promise.all([...promises1, ...promises2]).then(() => {
         this.state = this.STATES.success;
       }).catch((err) => {
+        console.error(err);
         this.state = this.STATES.error;
       });
     },
