@@ -1,54 +1,59 @@
 <template>
   <div class="_panel_container">
     <div class="header">
-      <md-button class="md-icon-button md-primary"  @click="startAll">
-        <md-icon >not_started</md-icon>
+      <md-button class="md-icon-button md-primary" @click="startAll">
+        <md-icon>not_started</md-icon>
       </md-button>
-      
-      <md-button class="md-icon-button md-accent"  @click="stopAll">
+
+      <md-button class="md-icon-button md-accent" @click="stopAll">
         <md-icon>stop</md-icon>
       </md-button>
 
-      <md-button class="md-icon-button md-primary"  @click="restartAll">
+      <md-button class="md-icon-button md-primary" @click="restartAll">
         <md-icon>restart_alt</md-icon>
       </md-button>
 
-        <md-button class="md-primary" @click="() => changeAllTimeSeries(true)">Save all time series </md-button>
+      <md-button class="md-primary" @click="() => changeAllTimeSeries(true)">Save all time series </md-button>
 
-        <md-button class="md-accent" @click="() => changeAllTimeSeries(false)">Stop saving all time series</md-button>
+      <md-button class="md-accent" @click="() => changeAllTimeSeries(false)">Stop saving all time series</md-button>
 
     </div>
 
     <md-list class="listDiv md-double-line">
       <md-list-item v-for="device in devices" :key="device.id">
         <div class="md-list-item-text">
-          <span>{{device.name}}</span>
-          <span :class="`${getState(device.id)} subtypes`" >{{getState(device.id)}}</span>
+          <span>{{ device.name }}</span>
+          <span :class="`${getState(device.id)} subtypes`">{{ getState(device.id) }}</span>
         </div>
 
 
         <div class="md-list-action">
-          <md-button class="md-icon-button md-primary" :disabled="disableBtn(Button_names.start, device.id)" @click="() => start(device.id)">
-            <md-icon >not_started</md-icon>
+          <md-button class="md-icon-button md-primary" :disabled="disableBtn(Button_names.start, device.id)"
+            @click="() => start(device.id)">
+            <md-icon>not_started</md-icon>
           </md-button>
-          
-          <md-button class="md-icon-button md-accent" :disabled="disableBtn(Button_names.stop, device.id)" @click="() => stop(device.id)">
+
+          <md-button class="md-icon-button md-accent" :disabled="disableBtn(Button_names.stop, device.id)"
+            @click="() => stop(device.id)">
             <md-icon>stop</md-icon>
           </md-button>
 
-          <md-button class="md-icon-button md-primary" :disabled="disableBtn(Button_names.restart, device.id)" @click="() => restart(device.id)">
+          <md-button class="md-icon-button md-primary" :disabled="disableBtn(Button_names.restart, device.id)"
+            @click="() => restart(device.id)">
             <md-icon>restart_alt</md-icon>
           </md-button>
 
 
           <div class="block">
             <div class="input">
-              <md-checkbox class="primary" :disabled="disableBtn(Button_names.checkbox, device.id)" :value="!getTimeSeriesValue(device.id)" @change="() => setTimeSeriesValue(device.id)">Save timeseries</md-checkbox>
+              <md-checkbox class="primary" :disabled="disableBtn(Button_names.checkbox, device.id)"
+                :value="!getTimeSeriesValue(device.id)" @change="() => setTimeSeriesValue(device.id)">Save
+                timeseries</md-checkbox>
             </div>
           </div>
 
         </div>
-        
+
       </md-list-item>
 
     </md-list>
@@ -66,23 +71,23 @@ import * as lodash from "lodash"
 export default {
   name: MONITORING_PANEL_NAME,
   data() {
-    
+
     this.context;
     this.graph;
     this.organ;
     this.network;
 
     this.STATES = {
-      loading : 1,
-      loaded : 2, 
-      error : 3
+      loading: 1,
+      loaded: 2,
+      error: 3
     }
 
     this.Button_names = {
-      start : 1,
-      stop : 2,
-      restart : 3,
-      checkbox : 4
+      start: 1,
+      stop: 2,
+      restart: 3,
+      checkbox: 4
     }
 
     this.STEPS = Object.freeze({
@@ -98,10 +103,10 @@ export default {
     return {
       state: this.STATES.loading,
       step: this.STEPS.serverInfo,
-      devices : []
+      devices: []
     };
   },
-  
+
   methods: {
     async opened(params) {
       this.graph = params.graph;
@@ -111,33 +116,33 @@ export default {
       this.devices = await this.getDevices(params.selectedNode);
     },
 
-    closed() {},
+    closed() { },
 
     async start(deviceId, globalUpdate) {
       const listener = this.listeners[deviceId];
-      if(listener) {
+      if (listener) {
         listener.monitored.set(true);
-        if(!globalUpdate) this.updateInterface()
+        if (!globalUpdate) this.updateInterface()
         return;
       }
 
       const node = this.nodes[deviceId];
       const profile = await opcuaProfileService.getProfileLinked(node);
 
-      if(!profile) return;
+      if (!profile) return;
 
-      let model = new SpinalOPCUAListener(this.graph,this.context, this.organ, this.network, node, profile, true);
+      let model = new SpinalOPCUAListener(this.graph, this.context, this.organ, this.network, node, profile, true);
       await model.addToDevice();
 
       this.listeners[deviceId] = model;
-      if(!globalUpdate) this.updateInterface()
+      if (!globalUpdate) this.updateInterface()
     },
 
     stop(deviceId, globalUpdate) {
       const listener = this.listeners[deviceId];
-      
-      if(listener) {
-        if(!globalUpdate) this.updateInterface()
+
+      if (listener) {
+        if (!globalUpdate) this.updateInterface()
         listener.monitored.set(false);
       }
 
@@ -146,60 +151,60 @@ export default {
     restart(deviceId, globalUpdate) {
       return new Promise(async (resolve) => {
         await this.stop(deviceId, globalUpdate);
-      
+
         setTimeout(async () => {
           await this.start(deviceId, globalUpdate);
           resolve(true);
         }, 1000);
       });
-      
+
     },
 
     async getDevices(selectedNode) {
       const type = selectedNode.getType().get();
       let devices = [];
-      
-      if(type === SpinalBmsNetwork.nodeTypeName) devices = await selectedNode.getChildren(SpinalBmsDevice.relationName);
-      else if(type === SpinalBmsDevice.nodeTypeName) devices = [selectedNode];
+
+      if (type === SpinalBmsNetwork.nodeTypeName) devices = await selectedNode.getChildren(SpinalBmsDevice.relationName);
+      else if (type === SpinalBmsDevice.nodeTypeName) devices = [selectedNode];
 
       const promises = devices.map(async device => {
         const id = device.getId().get();
         this.nodes[id] = device;
         const listener = await this.getListnerModel(device);
-        if(listener) this.listeners[id] = listener;
+        if (listener) this.listeners[id] = listener;
         return device.info.get();
       })
 
       return Promise.all(promises);
-      
+
     },
 
     disableBtn(button, nodeId) {
       const node = this.nodes[nodeId];
-      if(!node || !node.hasRelation(CONTEXT_TO_PROFILE_RELATION, SPINAL_RELATION_PTR_LST_TYPE)) return true;
+      if (!node || !node.hasRelation(CONTEXT_TO_PROFILE_RELATION, SPINAL_RELATION_PTR_LST_TYPE)) return true;
 
       const listener = this.listeners[nodeId];
 
       switch (button) {
         case this.Button_names.checkbox:
           return !listener ? true : false;
-          
+
         case this.Button_names.start:
-          if(listener && listener.monitored && listener.monitored.get()) return true;
+          if (listener && listener.monitored && listener.monitored.get()) return true;
           return false;
 
         case this.Button_names.stop:
-          if(!listener || !listener.monitored || !listener.monitored.get()) return true;
+          if (!listener || !listener.monitored || !listener.monitored.get()) return true;
           return false;
 
         case this.Button_names.restart:
-          if(listener && listener.monitored && listener.monitored.get())  return false;  
+          if (listener && listener.monitored && listener.monitored.get()) return false;
           return true;
       }
     },
 
     getListnerModel(device) {
-      if(device.info.listener) {
+      if (device.info.listener) {
         return new Promise((resolve, reject) => {
           try {
             device.info.listener.load((data) => resolve(data));
@@ -213,8 +218,8 @@ export default {
     getState(nodeId) {
       const node = this.nodes[nodeId];
 
-      if(!node || !node.hasRelation(CONTEXT_TO_PROFILE_RELATION, SPINAL_RELATION_PTR_LST_TYPE)) return "No_profile Linked";
-      
+      if (!node || !node.hasRelation(CONTEXT_TO_PROFILE_RELATION, SPINAL_RELATION_PTR_LST_TYPE)) return "No_profile Linked";
+
       const listener = this.listeners[nodeId];
 
       return listener && listener.monitored && listener.monitored.get() ? "Monitored" : "Stopped";
@@ -222,7 +227,7 @@ export default {
 
     async startAll() {
       const globalUpdate = true;
-      
+
       for (const device of this.devices) {
         await this.start(device.id, globalUpdate);
         this.updateInterface()
@@ -232,7 +237,7 @@ export default {
 
     stopAll() {
       const globalUpdate = true;
-      
+
       for (const device of this.devices) {
         this.stop(device.id, globalUpdate);
       }
@@ -242,7 +247,7 @@ export default {
 
     async restartAll() {
       const globalUpdate = true;
-      
+
       for (const device of this.devices) {
         await this.restart(device.id, globalUpdate);
         this.updateInterface()
@@ -254,7 +259,7 @@ export default {
       for (const device of this.devices) {
         const listener = this.listeners[device.id];
 
-        if(listener && listener.saveTimeSeries) {
+        if (listener && listener.saveTimeSeries) {
           listener.saveTimeSeries.set(value);
         }
       }
@@ -266,7 +271,7 @@ export default {
     getTimeSeriesValue(deviceId) {
       console.log("getting value")
       const listener = this.listeners[deviceId];
-      if(!listener) return false;
+      if (!listener) return false;
 
       return listener.saveTimeSeries && listener.saveTimeSeries.get() || false;
     },
@@ -274,7 +279,7 @@ export default {
     setTimeSeriesValue(deviceId) {
       const listener = this.listeners[deviceId];
 
-      if(listener && listener.saveTimeSeries) {
+      if (listener && listener.saveTimeSeries) {
         const value = !listener.saveTimeSeries.get()
         listener.saveTimeSeries.set(value);
       }
@@ -284,12 +289,12 @@ export default {
     }
 
   },
-  
+
 };
 </script>
 
 <style>
-@import url("https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons");
+/* @import url("https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons");*/
 </style>
 
 <style scoped lang="scss">
@@ -329,15 +334,12 @@ export default {
     align-items: center;
   }
 
-  
+
 }
-
-
-
 </style>
 
 <style>
-._panel_container  * {
+._panel_container * {
   box-sizing: border-box !important;
 }
 

@@ -1,27 +1,15 @@
 <template>
   <div class="_panel_container">
-    <md-steppers
-      class="stepper_container"
-      :md-active-step.sync="step"
-      md-vertical
-      md-linear
-    >
+    <md-steppers class="stepper_container" :md-active-step.sync="step" md-vertical md-linear>
       <!-- Step 1 -->
-      <md-step
-        :id="getId(STEPS.serverInfo)"
-        md-label="Server Info"
-        md-description="Enter OPC Server information"
-        :md-editable="false"
-        :md-done="step > STEPS.serverInfo">
+      <md-step :id="getId(STEPS.serverInfo)" md-label="Server Info" md-description="Enter OPC Server information"
+        :md-editable="false" :md-done="step > STEPS.serverInfo">
 
-          <server-info-step 
-            :serverInfo="serverInfo"
-            :stepName="STEPS.serverInfo"
-            @nextStep="nextStep" />
+        <server-info-step :serverInfo="serverInfo" :stepName="STEPS.serverInfo" @nextStep="nextStep" />
 
       </md-step>
 
-       <!-- Step 2 -->
+      <!-- Step 2 -->
       <!-- <md-step
         :id="getId(STEPS.selectEntryPoint)"
         md-label="Entry point"
@@ -38,37 +26,19 @@
       </md-step> -->
 
       <!-- Step 3 -->
-      <md-step
-        :id="getId(STEPS.discovering)"
-        md-label="Discovering"
-        md-description="select the nodes to create"
-        :md-editable="false"
-        :md-done="step > STEPS.discovering">
+      <md-step :id="getId(STEPS.discovering)" md-label="Discovering" md-description="select the nodes to create"
+        :md-editable="false" :md-done="step > STEPS.discovering">
 
-          <discover-step
-            :stepName="STEPS.discovering" 
-            :state="state" 
-            :treeFields="treeFields" 
-            @discover="goToDiscovering"
-            @nextStep="goToCreationStep"
-            @goBack="goBack"
-            @cancel="cancelDiscovering" />
+        <discover-step :stepName="STEPS.discovering" :state="state" :treeFields="treeFields" @discover="goToDiscovering"
+          @nextStep="goToCreationStep" @goBack="goBack" @cancel="cancelDiscovering" />
 
       </md-step>
 
       <!-- Step 4 -->
-      <md-step
-        :id="getId(STEPS.creation)"
-        md-label="Create Nodes"
-        md-description="Node creation"
-        :md-editable="false">
+      <md-step :id="getId(STEPS.creation)" md-label="Create Nodes" md-description="Node creation" :md-editable="false">
 
-          <create-node-step 
-            :stepName="STEPS.creation" 
-            :state="state" 
-            @create="createNodes" 
-            @goBack="goBack" />
-            
+        <create-node-step :stepName="STEPS.creation" :state="state" @create="createNodes" @goBack="goBack" />
+
       </md-step>
     </md-steppers>
   </div>
@@ -89,10 +59,10 @@ const tJSON = require("./test.json");
 export default {
   name: DISCOVER_OPCUA_PANEL,
   components: {
-    "server-info-step" : ServerInfoStep,
-    "entry-point-step" : EntryPointStep,
-    "discover-step" : DiscoverStep,
-    "create-node-step" : CreateNodeStep
+    "server-info-step": ServerInfoStep,
+    "entry-point-step": EntryPointStep,
+    "discover-step": DiscoverStep,
+    "create-node-step": CreateNodeStep
   },
   data() {
     this.STATES = OPCUA_ORGAN_STATES;
@@ -114,23 +84,23 @@ export default {
       step: this.STEPS.serverInfo,
       state: this.STATES.initial,
       treeFields: [],
-      entryPointTreeFields : [],
+      entryPointTreeFields: [],
       checkedNodes: [],
       serverInfo: {
         name: "Server Local",
         ip: "spinalcom",
         port: 5011,
-        endpoint : "/IcoFwxServer"
+        endpoint: "/IcoFwxServer"
       },
     };
   },
   methods: {
-    async opened({graph, context, organ, serverInfo}) {
+    async opened({ graph, context, organ, serverInfo }) {
       this.graph = graph;
       this.context = context;
       this.organ = await organ.getElement(true);
       console.log("serverInfo", serverInfo);
-      if(serverInfo) this.serverInfo = serverInfo;
+      if (serverInfo) this.serverInfo = serverInfo;
 
       if (typeof this.spinalDiscover !== "undefined") {
         this.spinalDiscover = undefined;
@@ -140,7 +110,7 @@ export default {
       }
     },
 
-    closed() {},
+    closed() { },
 
     getId(id) {
       return id.toString();
@@ -151,7 +121,7 @@ export default {
       return realNode.getElement();
     },
 
-    goToCreationStep({checkedNodes, stepName}) {
+    goToCreationStep({ checkedNodes, stepName }) {
       this.checkedNodes = checkedNodes;
       this.nextStep(stepName);
     },
@@ -359,7 +329,7 @@ export default {
 </script>
 
 <style>
-@import url("https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons");
+/* @import url("https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons"); */
 </style>
 
 <style lang="scss">
@@ -371,8 +341,10 @@ export default {
     width: 100%;
     height: calc(100% - 30px);
     background: transparent !important;
+
     .form {
       width: 90%;
+
       .md-field {
         min-height: unset !important;
       }
@@ -385,6 +357,7 @@ export default {
       align-items: center;
       justify-content: center;
     }
+
     .discovering_state {
       width: 100%;
       height: 100%;
@@ -393,6 +366,7 @@ export default {
       align-items: center;
       justify-content: center;
     }
+
     .discovered_state {
       .control_wrapper {
         height: 350px;
@@ -401,12 +375,9 @@ export default {
     }
   }
 }
-
-
 </style>
 
 <style lang="scss">
-
 ._panel_container * {
   box-sizing: border-box !important;
 }
@@ -416,9 +387,11 @@ export default {
     .md-steppers-wrapper {
       width: 100%;
       height: 100%;
+
       .md-steppers-container {
         width: 100%;
         height: 100%;
+
         .md-stepper-content.md-active {
           width: calc(100% - 60px);
           min-height: 390px;
