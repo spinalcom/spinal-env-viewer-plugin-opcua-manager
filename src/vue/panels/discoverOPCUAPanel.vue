@@ -30,7 +30,8 @@
         :md-editable="false" :md-done="step > STEPS.discovering">
 
         <discover-step :stepName="STEPS.discovering" :state="state" :treeFields="treeFields" @discover="goToDiscovering"
-          @nextStep="goToCreationStep" @goBack="goBack" @cancel="cancelDiscovering" />
+          @nextStep="goToCreationStep" @goBack="goBack" @cancel="cancelDiscovering" @retry="retry" :asking="ask"
+          @askResult="ConfirmChoice" />
 
       </md-step>
 
@@ -52,9 +53,15 @@ import EntryPointStep from "./step_content/selectEntryPoint.vue";
 import DiscoverStep from "./step_content/discoverDevice.vue";
 import CreateNodeStep from "./step_content/createNodes.vue";
 import { OPCUA_ORGAN_STATES, SpinalOPCUADiscoverModel, SpinalOPCUAEntryPoint } from "spinal-model-opcua";
+import { initial } from "lodash";
 
 const tJSON = require("./test.json");
-
+const STEPS = Object.freeze({
+  serverInfo: "1",
+  // selectEntryPoint: "2",
+  discovering: "2",
+  creation: "3",
+});
 
 export default {
   name: DISCOVER_OPCUA_PANEL,
@@ -73,12 +80,8 @@ export default {
     this.organ;
     this.devicesBindProcess;
 
-    this.STEPS = Object.freeze({
-      serverInfo: "1",
-      // selectEntryPoint: "2",
-      discovering: "2",
-      creation: "3",
-    });
+    this.STEPS = STEPS;
+    this.processBind = null;
 
     return {
       step: this.STEPS.serverInfo,
@@ -86,6 +89,7 @@ export default {
       treeFields: [],
       entryPointTreeFields: [],
       checkedNodes: [],
+      ask: false,
       serverInfo: {
         name: "Server Local",
         ip: "spinalcom",
@@ -99,18 +103,22 @@ export default {
       this.graph = graph;
       this.context = context;
       this.organ = await organ.getElement(true);
-      console.log("serverInfo", serverInfo);
+
       if (serverInfo) this.serverInfo = serverInfo;
 
-      if (typeof this.spinalDiscover !== "undefined") {
-        this.spinalDiscover = undefined;
-        this.state = OPCUA_ORGAN_STATES.initial;
-        this.step = this.STEPS.serverInfo;
-        this.spinalEntryPoint = undefined;
-      }
+      this.initialized();
     },
 
-    closed() { },
+    initialized() {
+      this.spinalDiscover = undefined;
+      this.state = OPCUA_ORGAN_STATES.initial;
+      this.step = this.STEPS.serverInfo;
+      this.spinalEntryPoint = undefined;
+    },
+
+    closed() {
+      if (this.spinalDiscover) this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.cancelled);
+    },
 
     getId(id) {
       return id.toString();
@@ -145,64 +153,116 @@ export default {
           this.step = (Number(step) - 1).toString();
           break;
       }
+
+      if (this.spinalDiscover) {
+        this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.cancelled);
+        this.state = OPCUA_ORGAN_STATES.initial;
+      }
+
     },
 
     //step end
 
     // discover
-    async goToDiscovering() {
-      this.state = OPCUA_ORGAN_STATES.discovering;
-      this.spinalDiscover = new SpinalOPCUADiscoverModel(
-        this.graph,
-        this.context,
-        this.organ,
-        this.serverInfo
-      );
+
+    async createNewSpinalDiscover() {
+      this.spinalDiscover = new SpinalOPCUADiscoverModel(this.graph, this.context, this.organ, this.serverInfo);
       this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.readyToDiscover);
 
       await this.spinalDiscover.addToGraph();
+      return this.spinalDiscover;
+    },
 
-      const processBind = this.spinalDiscover.state.bind(() => {
-        const state = this.spinalDiscover.state.get();
+    async goToDiscovering() {
+      this.state = OPCUA_ORGAN_STATES.discovering;
+      await this.createNewSpinalDiscover();
 
-        if (state === OPCUA_ORGAN_STATES.discovered) {
-          this.spinalDiscover.state.unbind(processBind);
-          this.goToDiscovered();
-        }
-      });
+      this.bindDiscoverState();
     },
 
     async goToDiscovered() {
       this.treeFields = await this.spinalDiscover.getTreeDiscovered();
-      console.log("tree", this.treeFields);
       this.state = OPCUA_ORGAN_STATES.discovered;
     },
 
-    cancelDiscovering() {
+    async cancelDiscovering() {
       this.state = OPCUA_ORGAN_STATES.initial;
+      this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.cancelled);
     },
+
+    retry() {
+      this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.discovering);
+      this.state = OPCUA_ORGAN_STATES.discovering;
+    },
+
+    bindDiscoverState() {
+      this.processBind = this.spinalDiscover.state.bind(async () => {
+        const state = this.spinalDiscover.state.get();
+        switch (state) {
+          case OPCUA_ORGAN_STATES.discovered:
+            this.goToDiscovered();
+            break;
+
+          case OPCUA_ORGAN_STATES.error:
+            this.state = OPCUA_ORGAN_STATES.error;
+            break;
+          case OPCUA_ORGAN_STATES.cancelled:
+            await this.resetSpinalDiscover();
+            break;
+          case OPCUA_ORGAN_STATES.created:
+            this.state = OPCUA_ORGAN_STATES.created;
+            await this.resetSpinalDiscover();
+            break;
+          case OPCUA_ORGAN_STATES.pending:
+            this.state = OPCUA_ORGAN_STATES.pending;
+            this.ask = this.spinalDiscover.ask?.get() || false;
+            break;
+        }
+      });
+    },
+
+    async resetSpinalDiscover() {
+      if (this.spinalDiscover) {
+        if (this.processBind) this.spinalDiscover.state.unbind(this.processBind);
+        await this.spinalDiscover.removeFromGraph();
+
+        this.spinalDiscover = null;
+        this.processBind = null;
+      }
+
+    },
+
+
+    ConfirmChoice(choice) {
+      this.spinalDiscover.changeChoice(choice);
+      this.state = OPCUA_ORGAN_STATES.discovering;
+    },
+
 
     // discover end
 
     // creation
     async createNodes() {
-      // convert tree to obj
       this.state = OPCUA_ORGAN_STATES.creating;
-      const treeCopy = JSON.parse(JSON.stringify(this.treeFields));
-      const treeSelected = await this.filterTree(treeCopy, this.checkedNodes);
-      console.log("treeSelected", treeSelected);
+      const treeSelected = await this.getTreeSelected();
+
       await this.spinalDiscover.setTreeToCreate(treeSelected);
       this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.readyToCreate);
 
-      const processBind = this.spinalDiscover.state.bind(async () => {
-        const state = this.spinalDiscover.state.get();
+      // const processBind = this.spinalDiscover.state.bind(async () => {
+      //   const state = this.spinalDiscover.state.get();
 
-        if (state === OPCUA_ORGAN_STATES.created) {
-          await this.spinalDiscover.removeFromGraph();
-          this.state = OPCUA_ORGAN_STATES.created;
-          this.spinalDiscover.state.unbind(processBind);
-        }
-      });
+      //   if (state === OPCUA_ORGAN_STATES.created) {
+      //     await this.spinalDiscover.removeFromGraph();
+      //     this.state = OPCUA_ORGAN_STATES.created;
+      //     this.spinalDiscover.state.unbind(processBind);
+      //   }
+      // });
+    },
+
+    getTreeSelected() {
+      const treeCopy = JSON.parse(JSON.stringify(this.treeFields));
+      return this.filterTree(treeCopy, this.checkedNodes);
     },
 
     async filterTree(tree, nodeSelected) {

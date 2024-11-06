@@ -12,66 +12,73 @@
 
         <div class="discovered_state" v-else-if="state === STATES.discovered">
             <div class="control_wrapper">
-              <!-- <ejs-treeview id='treeview' :fields="treeFields" :showCheckBox='true' :checkedNodes='checkedNodes'></ejs-treeview> -->
-
-              <v-treeview
-                dark
-                selectable
-                open-on-click
-                hoverable
-                transition
-                item-text="displayName"
-                item-key="nodeId"
-                selected-color="primary"
-                v-model="checkedNodes"
-                :items="treeFields.children"
-              ></v-treeview>
+                <v-treeview dark selectable open-on-click hoverable transition item-text="displayName" item-key="nodeId"
+                    selected-color="primary" v-model="checkedNodes" :items="treeFields.children"></v-treeview>
             </div>
 
             <div>
-              <md-button
-                class="md-raised md-primary"
-                @click="nextStep" :disabled="checkedNodes.length === 0">Next</md-button>
-              <md-button
-                class="md-raised md-accent"
-                @click="goBack"> Back </md-button>
+                <md-button class="md-raised md-primary" @click="nextStep"
+                    :disabled="checkedNodes.length === 0">Next</md-button>
+                <md-button class="md-raised md-accent" @click="goBack"> Back </md-button>
             </div>
-          </div>
-          <!-- <div class="disocered_content"></div> -->
+        </div>
+
+        <div v-else-if="state === STATES.error">
+            <div class="error_content">
+                <div>Something went wrong, please</div>
+                <md-button class="md-primary" flat @click="retry">try again</md-button>
+                <div>or</div>
+                <md-button class="md-accent" flat @click="goBack">go back</md-button>
+            </div>
+        </div>
+
+        <div v-else-if="state === STATES.pending && asking">
+            <div>A previous result for this discovery exists. Would you like to use it?</div>
+            <div>
+                <md-button class="md-raised md-primary" @click="askResult(CHOICES.yes)">Yes</md-button>
+                <md-button class="md-raised md-accent" @click="askResult(CHOICES.no)">No</md-button>
+            </div>
+        </div>
+
+
+        <!-- <div class="disocered_content"></div> -->
     </div>
 </template>
 
 <script>
 
-import { OPCUA_ORGAN_STATES } from "spinal-model-opcua";
+import { OPCUA_ORGAN_STATES, OPCUA_ORGAN_USER_CHOICE } from "spinal-model-opcua";
 import { TreeViewComponent } from "@syncfusion/ej2-vue-navigations";
 
 
 export default {
-    name : "DiscoverStep",
+    name: "DiscoverStep",
     components: {
         "ejs-treeview": TreeViewComponent,
     },
     props: {
-        stepName : {required : true},
-        state : {required : true },
-        treeFields: {required: true},
+        stepName: { required: true },
+        state: { required: true },
+        treeFields: { required: true },
+        asking: { required: false, default: false }
     },
     data() {
         this.STATES = OPCUA_ORGAN_STATES;
+        this.CHOICES = OPCUA_ORGAN_USER_CHOICE;
+
         return {
             checkedNodes: []
         }
     },
 
-    methods : {
+    methods: {
 
         goToDiscovering() {
             this.$emit("discover");
         },
 
         nextStep() {
-            this.$emit("nextStep", { stepName : this.stepName, checkedNodes: this.checkedNodes });
+            this.$emit("nextStep", { stepName: this.stepName, checkedNodes: this.checkedNodes });
         },
 
         goBack() {
@@ -81,10 +88,21 @@ export default {
         cancelDiscovering() {
             this.$emit("cancel");
         },
+
+        retry() {
+            this.$emit("retry");
+        },
+
+        askResult(useResult) {
+            this.$emit("askResult", useResult);
+        }
     }
 }
 </script>
 
-<style>
-
+<style scoped>
+.error_content {
+    display: flex;
+    align-items: center;
+}
 </style>
