@@ -1,9 +1,5 @@
 <template>
-  <md-dialog
-    class="configContainer"
-    :md-active.sync="showDialog"
-    @md-closed="closeDialog(false)"
-  >
+  <md-dialog class="configContainer" :md-active.sync="showDialog" @md-closed="closeDialog(false)">
     <md-dialog-title class="title">
       Configure Monitoring profile
     </md-dialog-title>
@@ -36,14 +32,8 @@
 
           <md-list class="md-double-line item_list" v-if="endpointsFiltered.length > 0">
             <!-- <md-subheader>Endpoints list</md-subheader> -->
-            <md-list-item
-              v-for="e in endpointsFiltered"
-              :key="e.id"
-              @click.stop="() => selectEndpoint(e)"
-              class="listItem"
-              :class="{ selected: isSelected(e) }" 
-              draggable="true"
-              @dragstart="() => dragItems(e.id)">
+            <md-list-item v-for="e in endpointsFiltered" :key="e.id" @click.stop="() => selectEndpoint(e)"
+              class="listItem" :class="{ selected: isSelected(e) }" draggable="true" @dragstart="() => dragItems(e.id)">
               <div class="md-list-item-text">
                 <span>{{ e.name }}</span>
                 <span class="pathDiv">{{ e.path || "" }}</span>
@@ -69,38 +59,24 @@
           <div class="div_title">Intervals list</div>
 
           <md-list :md-expand-single="expandSingle" class="item_list">
-            <md-list-item
-              md-expand
-              v-for="interval in intervalsList"
-              :key="interval.value"
-              :class="{ selected: interValIsSelected(interval.value) }"
-              @click="() => selectInterval(interval)"
-              @dragover="e => e.preventDefault()"
-              @drop="(e) => dropItems(interval, e)">
+            <md-list-item md-expand v-for="interval in intervalsList" :key="interval.value"
+              :class="{ selected: interValIsSelected(interval.value) }" @click="() => selectInterval(interval)"
+              @dragover="e => e.preventDefault()" @drop="(e) => dropItems(interval, e)">
 
               <md-icon>schedule</md-icon>
               <span class="md-list-item-text">{{ interval.name }}</span>
-              <md-button
-                class="md-icon-button md-list-action md-accent"
-                @click="() => deleteInterval(interval)"
-              >
+              <md-button class="md-icon-button md-list-action md-accent" @click="() => deleteInterval(interval)">
                 <md-icon>remove</md-icon>
               </md-button>
 
               <md-list slot="md-expand">
-                <md-list-item
-                  class="md-inset"
-                  v-for="item in interval.items"
-                  :key="item.id"
-                >
+                <md-list-item class="md-inset" v-for="item in interval.items" :key="item.id">
                   <div class="md-list-item-text">
                     {{ item.name }}
                   </div>
 
-                  <md-button
-                    class="md-icon-button md-list-action md-accent"
-                    @click="() => deleteInterval(interval, item)"
-                  >
+                  <md-button class="md-icon-button md-list-action md-accent"
+                    @click="() => deleteInterval(interval, item)">
                     <md-icon>remove</md-icon>
                   </md-button>
                 </md-list-item>
@@ -108,19 +84,13 @@
             </md-list-item>
           </md-list>
 
-          <md-button
-            class="md-fab md-primary md-mini md-fab-bottom-right"
-            title="add inverval"
-            @click="showIntervalDialog = true"
-          >
+          <md-button class="md-fab md-primary md-mini md-fab-bottom-right" title="add inverval"
+            @click="showIntervalDialog = true">
             <md-icon>add</md-icon>
           </md-button>
 
-          <add-interval-dialog
-            :showIntervalDialog="showIntervalDialog"
-            @cancel="showIntervalDialog = false"
-            @save="addInterval"
-          />
+          <add-interval-dialog :showIntervalDialog="showIntervalDialog" @cancel="showIntervalDialog = false"
+            @save="addInterval" />
         </div>
       </div>
 
@@ -146,9 +116,10 @@ import opcuaProfileService from '../../js/profile_service';
 import * as lodash from "lodash";
 
 const defaultIntervals = [
-    { name: "30s", value: 30000, items: [] },
-    { name: "1min", value: 60000, items: [] },
-    { name: "5min", value: 300000, items: [] },
+  { name: "cov", value: 0, items: [] },
+  { name: "30s", value: 30000, items: [] },
+  { name: "1min", value: 60000, items: [] },
+  { name: "5min", value: 300000, items: [] },
 ]
 
 export default {
@@ -161,12 +132,12 @@ export default {
     this.STATES = {
       loading: 1,
       loaded: 2,
-      success : 3,
-      error : 4
+      success: 3,
+      error: 4
     };
 
     this.spinalNodesObjects = {};
-    
+
     this.old_endpoints = {};
     this.old_intervals = {};
     this.filterBounced = lodash.debounce(this.filterEndpoint.bind(this), 200);
@@ -180,18 +151,18 @@ export default {
 
       endpoints: [],
       endpointSelectedList: [],
-      endpointsFiltered : [],
+      endpointsFiltered: [],
 
 
       intervalsList: defaultIntervals,
       intervalSelected: null,
-      
+
       showIntervalDialog: false,
       closeMenu: true,
       intervalToAdd: "",
     };
   },
-  mounted(){
+  mounted() {
     this.filterBounced();
   },
   methods: {
@@ -201,7 +172,7 @@ export default {
       // this.organ = organ;
       this.state = this.STATES.loading;
       const [endpoints, intervals] = await this.initializate(selectedNode);
-      
+
       this.endpoints = endpoints;
       this.intervalsList = intervals;
 
@@ -222,7 +193,7 @@ export default {
 
     async initializate(selectedNode) {
       await opcuaProfileService.init();
-      const promises = [ this.getAllEndpoints(selectedNode), this.getIntervals(selectedNode)];
+      const promises = [this.getAllEndpoints(selectedNode), this.getIntervals(selectedNode)];
       return Promise.all(promises);
     },
 
@@ -238,22 +209,22 @@ export default {
 
     async getIntervals(selectedNode) {
       const intervals = await opcuaProfileService.getIntervals(selectedNode);
-      if(intervals.length === 0) return defaultIntervals;
+      if (intervals.length === 0) return defaultIntervals;
 
       return intervals.reduce((list, interval) => {
         const node = interval.node;
         const info = node.info.get();
         const nodeId = info.id;
-        
-        this.old_intervals[nodeId] = { node, children : {}};
+
+        this.old_intervals[nodeId] = { node, children: {} };
         this.spinalNodesObjects[nodeId] = node;
 
         info.items = interval.children.map(child => {
-          
+
           const childInfo = child.info.get();
           this.spinalNodesObjects[childInfo.id] = child;
           this.old_intervals[nodeId].children[childInfo.id] = child;
-          return childInfo; 
+          return childInfo;
         });
 
         list.push(info);
@@ -293,7 +264,7 @@ export default {
     },
 
     addToInterList(intervalSelected) {
-      if(!intervalSelected) intervalSelected = this.intervalSelected;
+      if (!intervalSelected) intervalSelected = this.intervalSelected;
 
       const endpoints = JSON.parse(JSON.stringify(this.endpoints));
       const selectedIds = JSON.parse(JSON.stringify(this.endpointSelectedList));
@@ -305,7 +276,7 @@ export default {
 
       intervalSelected.items = [...intervalSelected.items, ...selected];
 
-      this.intervalSelected = intervalSelected; 
+      this.intervalSelected = intervalSelected;
     },
 
     deleteInterval(interval, item) {
@@ -338,7 +309,7 @@ export default {
     },
 
     dragItems(id) {
-      if(!this.endpointSelectedList.includes(id)) {
+      if (!this.endpointSelectedList.includes(id)) {
         this.endpointSelectedList = [...this.endpointSelectedList, id];
       }
     },
@@ -350,12 +321,12 @@ export default {
     Save() {
       this.state = this.STATES.loading;
 
-      const { toAdd , toRemove } = this.getEndpointsModifications();
+      const { toAdd, toRemove } = this.getEndpointsModifications();
       const intervalsModifications = this.getIntervalModifications();
 
       const promises1 = intervalsModifications.map(el => {
         const intervalNode = this.spinalNodesObjects[el.id];
-        if(!intervalNode) return opcuaProfileService.addIntervalToProfile(this.selectedNode, el, el.toAdd);
+        if (!intervalNode) return opcuaProfileService.addIntervalToProfile(this.selectedNode, el, el.toAdd);
 
         return Promise.all([opcuaProfileService.addItemsToInterval(intervalNode, el.toAdd), opcuaProfileService.removeItemsFromInterval(intervalNode, el.toRemove)])
       })
@@ -378,25 +349,25 @@ export default {
       const old_endpointsCopy = Object.assign({}, this.old_endpoints);
 
       for (const endpoint of this.endpoints) {
-        const node = old_endpointsCopy[endpoint.id]; 
-        if(node) delete old_endpointsCopy[endpoint.id];
+        const node = old_endpointsCopy[endpoint.id];
+        if (node) delete old_endpointsCopy[endpoint.id];
         else toAdd.push(this.spinalNodesObjects[endpoint.id]);
       }
 
       const toRemove = Array.from(Object.values(old_endpointsCopy));
 
-      return {toAdd, toRemove};
+      return { toAdd, toRemove };
     },
 
     getIntervalModifications() {
 
-      const checkIfIsMod = (items, childrenObj) =>  {
+      const checkIfIsMod = (items, childrenObj) => {
         const childrenCopy = Object.assign({}, childrenObj);
         const toAdd = [];
 
         for (const item of items) {
-          const node = childrenCopy[item.id]; 
-          if(node) delete childrenCopy[item.id];
+          const node = childrenCopy[item.id];
+          if (node) delete childrenCopy[item.id];
           else toAdd.push(this.spinalNodesObjects[item.id]);
         }
 
@@ -408,23 +379,23 @@ export default {
       const intervals = []
 
       for (const interval of this.intervalsList) {
-        if(!interval.id || !this.old_intervals[interval.id]) {
+        if (!interval.id || !this.old_intervals[interval.id]) {
           intervals.push({
-            name : interval.name,
+            name: interval.name,
             value: interval.value,
-            toAdd : interval.items.map(el => this.spinalNodesObjects[el.id]),
+            toAdd: interval.items.map(el => this.spinalNodesObjects[el.id]),
             toRemove: []
           })
         } else {
           const oldInterval = this.old_intervals[interval.id];
           const childrenObj = (oldInterval && oldInterval.children) || {};
 
-          const {toAdd, toRemove} = checkIfIsMod(interval.items, childrenObj)
+          const { toAdd, toRemove } = checkIfIsMod(interval.items, childrenObj)
 
-          if(toAdd.length > 0 || toRemove.length > 0) {
+          if (toAdd.length > 0 || toRemove.length > 0) {
             intervals.push({
               id: interval.id,
-              name : interval.name,
+              name: interval.name,
               value: interval.value,
               toAdd,
               toRemove
@@ -433,13 +404,13 @@ export default {
         }
       }
 
-      
+
 
       return intervals;
     },
 
     filterEndpoint() {
-      if(this.searchText.trim().length > 0) 
+      if (this.searchText.trim().length > 0)
         this.endpointsFiltered = this.endpoints.filter(el => el.name.toLowerCase().includes(this.searchText.trim().toLowerCase()));
       else
         this.endpointsFiltered = Object.assign([], this.endpoints);
@@ -456,7 +427,7 @@ export default {
 
   },
 
-  watch : {
+  watch: {
     searchText() {
       this.filterBounced();
     },
@@ -492,7 +463,7 @@ $maxWith : 950px;
 
     .list_div {
       // width: calc(50% - 30px);
-      width: 49%; 
+      width: 49%;
       height: 100%;
       border: 1px solid grey;
       border-radius: 10px;
@@ -511,6 +482,7 @@ $maxWith : 950px;
       .div_title.endpoint_div_title {
         display: flex;
         justify-content: space-between !important;
+
         .action {
           display: flex;
           align-items: center;
@@ -522,7 +494,7 @@ $maxWith : 950px;
         overflow: auto;
       }
 
-      
+
 
       .listItem {
         height: 50px !important;
@@ -569,12 +541,12 @@ $maxWith : 950px;
 .menuContainer {
   width: 250px;
   padding: 0 10px;
+
   .menuTitle {
     font-size: 1em;
   }
 
-  .menuContent {
-  }
+  .menuContent {}
 
   .menuAction {
     width: 100%;
