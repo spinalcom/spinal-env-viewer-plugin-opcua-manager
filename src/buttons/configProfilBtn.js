@@ -10,7 +10,7 @@ import { PROFILE_TYPE } from "../js/profile_service";
 class ConfigProfilBtn extends SpinalContextApp {
     constructor() {
         super("Configure OPCUA monitoring Profile", "This button allows to configure opcua network monitoring profile", {
-            icon: "manage_history",
+            icon: "timer",
             icon_type: "in",
             backgroundColor: "#FF0000",
             fontColor: "#FFFFFF"

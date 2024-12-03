@@ -10,7 +10,7 @@ import { SpinalBmsDevice } from "spinal-model-bmsnetwork";
 class GenerateProfile extends SpinalContextApp {
     constructor() {
         super("Generate OPCUA Profile", "This button allows to Generate opcua monitoring Profile", {
-            icon: "auto_mode",
+            icon: "transform",
             icon_type: "in",
             backgroundColor: "#FF0000",
             fontColor: "#FFFFFF"

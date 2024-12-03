@@ -1,16 +1,16 @@
 <template>
   <div class="_panel_container">
     <div class="header">
-      <md-button class="md-icon-button md-primary" @click="startAll">
-        <md-icon>not_started</md-icon>
+      <md-button class="md-icon-button md-primary" @click="startAll" title="start all">
+        <md-icon>play_arrow</md-icon>
       </md-button>
 
-      <md-button class="md-icon-button md-accent" @click="stopAll">
+      <md-button class="md-icon-button md-accent" @click="stopAll" title="stop all">
         <md-icon>stop</md-icon>
       </md-button>
 
-      <md-button class="md-icon-button md-primary" @click="restartAll">
-        <md-icon>restart_alt</md-icon>
+      <md-button class="md-icon-button md-primary" @click="restartAll" title="restart all">
+        <md-icon>refresh</md-icon>
       </md-button>
 
       <md-button class="md-primary" @click="() => changeAllTimeSeries(true)">Save all time series </md-button>
@@ -29,18 +29,18 @@
 
         <div class="md-list-action">
           <md-button class="md-icon-button md-primary" :disabled="disableBtn(Button_names.start, device.id)"
-            @click="() => start(device.id)">
-            <md-icon>not_started</md-icon>
+            @click="() => start(device.id)" title="start">
+            <md-icon>play_arrow</md-icon>
           </md-button>
 
           <md-button class="md-icon-button md-accent" :disabled="disableBtn(Button_names.stop, device.id)"
-            @click="() => stop(device.id)">
+            @click="() => stop(device.id)" title="stop">
             <md-icon>stop</md-icon>
           </md-button>
 
           <md-button class="md-icon-button md-primary" :disabled="disableBtn(Button_names.restart, device.id)"
-            @click="() => restart(device.id)">
-            <md-icon>restart_alt</md-icon>
+            @click="() => restart(device.id)" title="restart">
+            <md-icon>refresh</md-icon>
           </md-button>
 
 
@@ -306,7 +306,7 @@ export default {
     width: 99%;
     height: 50px;
     border: 1px solid grey;
-    margin: auto
+    margin: auto;
   }
 
   .listDiv {

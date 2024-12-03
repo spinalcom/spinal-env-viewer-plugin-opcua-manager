@@ -11,14 +11,14 @@ import utilities from "../js/utilities";
 class MonitoringOPCUABtn extends SpinalContextApp {
     constructor() {
         super("Monitor OPCUA Server", "This button allows to manage opcua network monitoring", {
-            icon: "display_settings",
+            icon: "personal_video",
             icon_type: "in",
             backgroundColor: "#FF0000",
             fontColor: "#FFFFFF"
         });
     }
 
-    async isShown(option) {                 
+    async isShown(option) {
         const typeSelected = option.selectedNode.type.get();
         const id = option.selectedNode.id.get();
         const contextId = option.context.id.get();
@@ -38,11 +38,11 @@ class MonitoringOPCUABtn extends SpinalContextApp {
         const typeSelected = option.selectedNode.type.get();
         const id = option.selectedNode.id.get();
         const contextId = option.context.id.get();
-        
-        const organ = await utilities.getOrgan(id, contextId);
-        let network = typeSelected === SpinalBmsNetwork.nodeTypeName ? SpinalGraphService.getRealNode(id) : await utilities.findNetwork(organ.getId().get(),contextId, id);
 
-        
+        const organ = await utilities.getOrgan(id, contextId);
+        let network = typeSelected === SpinalBmsNetwork.nodeTypeName ? SpinalGraphService.getRealNode(id) : await utilities.findNetwork(organ.getId().get(), contextId, id);
+
+
         const param = {
             graph: option.graph,
             context: SpinalGraphService.getRealNode(option.context.id.get()),

@@ -10,7 +10,7 @@ import { SpinalBmsDevice } from "spinal-model-bmsnetwork";
 class LinkProfileToDevice extends SpinalContextApp {
     constructor() {
         super("Link Profile to device", "This button allows to link opcua  Profile to Device", {
-            icon: "dataset_linked",
+            icon: "add_link",
             icon_type: "in",
             backgroundColor: "#FF0000",
             fontColor: "#FFFFFF"
