@@ -5,8 +5,8 @@
       <md-step :id="getId(STEPS.serverInfo)" md-label="Server Info" md-description="Enter OPC Server information"
         :md-editable="false" :md-done="step > STEPS.serverInfo">
 
-        <server-info-step :serverInfo="serverInfo" :stepName="STEPS.serverInfo" @nextStep="nextStep" />
-
+        <server-info-step :serverInfo="serverInfo" :stepName="STEPS.serverInfo" @nextStep="nextStep"
+          @addGateway="addGateway" @removeGateway="removeGateway" @upload="uploadGateways" :loading="isLoading" />
       </md-step>
 
       <!-- Step 2 -->
@@ -52,8 +52,8 @@ import ServerInfoStep from "./step_content/server_info.vue";
 import EntryPointStep from "./step_content/selectEntryPoint.vue";
 import DiscoverStep from "./step_content/discoverDevice.vue";
 import CreateNodeStep from "./step_content/createNodes.vue";
-import { OPCUA_ORGAN_STATES, SpinalOPCUADiscoverModel, SpinalOPCUAEntryPoint } from "spinal-model-opcua";
-import { initial } from "lodash";
+import { OPCUA_ORGAN_STATES, SpinalOPCUADiscoverModel } from "spinal-model-opcua";
+import spinalExcelManager from "spinal-env-viewer-plugin-excel-manager-service";
 
 const tJSON = require("./test.json");
 const STEPS = Object.freeze({
@@ -90,11 +90,13 @@ export default {
       entryPointTreeFields: [],
       checkedNodes: [],
       ask: false,
+      isLoading: false,
       serverInfo: {
-        name: "Server Local",
-        ip: "spinalcom",
-        port: 5011,
-        endpoint: "/IcoFwxServer"
+        name: "WBOX",
+        gateways: [{ id: 0, ip: "172.29.32.43", port: 26543, endpoint: "" }]
+        // ip: "172.29.32.43",
+        // port: 26543,
+        // endpoint: ""
       },
     };
   },
@@ -163,9 +165,67 @@ export default {
 
     //step end
 
+    // server info
+
+    addGateway() {
+      console.log("add gateway")
+      const id = this.serverInfo.gateways[0].id + 1;
+      this.serverInfo.gateways = [{ id, ip: "", port: "", endpoint: "" }, ...this.serverInfo.gateways];
+    },
+
+    removeGateway(item) {
+      const id = item.id;
+      this.serverInfo.gateways = this.serverInfo.gateways.filter(el => el.id !== id);
+    },
+
+    uploadGateways() {
+      let input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel";
+      input.click();
+
+      input.addEventListener("change", async (event) => {
+        this.isLoading = true;
+
+        try {
+          const file = event.target.files[0];
+          const ips = await this.convertFileDataToJson(file);
+          this.serverInfo.gateways = ips.map((el, index) => {
+            el.id = index;
+            return el;
+          });
+
+          this.isLoading = false;
+        } catch (error) {
+          console.log(error);
+
+          this.isLoading = false;
+        }
+      }, false);
+    },
+
+    async convertFileDataToJson(file) {
+      const dataJson = await spinalExcelManager.convertExcelToJson(file);
+      const ips = [];
+      let index = 0;
+      for (const key in dataJson) {
+        if (Object.hasOwnProperty.call(dataJson, key)) {
+          const values = dataJson[key];
+          for (const item of values) {
+            item.id = index;
+            ips.push(item);
+            index++;
+          }
+        }
+      }
+      return ips;
+    },
+
     // discover
 
     async createNewSpinalDiscover() {
+      this.serverInfo.gateways = this.serverInfo.gateways.filter(el => el.ip.trim().length > 0 && el.ip.toString().trim().length > 0);
+
       this.spinalDiscover = new SpinalOPCUADiscoverModel(this.graph, this.context, this.organ, this.serverInfo);
       this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.readyToDiscover);
 
@@ -459,5 +519,13 @@ export default {
       }
     }
   }
+}
+</style>
+
+
+<style>
+._panel_container .md-stepper-content {
+  padding-right: 0px !important;
+  padding-bottom: 0px !important;
 }
 </style>
