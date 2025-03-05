@@ -20,7 +20,7 @@
                         <div class="ips_col">
                             <md-field md-inline>
                                 <label>ip address</label>
-                                <md-input v-model="item.ip"></md-input>
+                                <md-input v-model="item.address"></md-input>
                             </md-field>
                         </div>
 
@@ -86,9 +86,9 @@ export default {
     },
     computed: {
         disabled() {
-            // if (this.serverInfo.name.trim().length == 0 || this.serverInfo.ip.trim().length == 0 || this.serverInfo.port.toString().length == 0)
+            // if (this.serverInfo.name.trim().length == 0 || this.serverInfo.address.trim().length == 0 || this.serverInfo.port.toString().length == 0)
             if (this.serverInfo.name.trim().length == 0) return true
-            const validIps = this.serverInfo.gateways.filter(el => el.ip.trim().length > 0 && el.port.toString().length > 0);
+            const validIps = this.serverInfo.gateways.filter(el => el.address.trim().length > 0 && el.port.toString().length > 0);
             if (validIps.length === 0) return true;
 
             return false;

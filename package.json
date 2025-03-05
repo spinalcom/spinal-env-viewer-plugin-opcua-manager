@@ -1,29 +1,29 @@
 {
-  "name": "spinal-env-viewer-plugin-opcua-manager",
-  "version": "1.1.4",
-  "description": "",
-  "main": "src/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "@syncfusion/ej2-vue-grids": "^24.2.3",
-    "@syncfusion/ej2-vue-navigations": "^24.2.4",
-    "lodash": "^4.17.20",
-    "spinal-connector-service": "git+https://github.com/spinalcom/spinal-connector-service.git",
-    "spinal-env-viewer-context-menu-service": "git+https://github.com/spinalcom/spinal-env-viewer-context-menu-service.git",
-    "spinal-env-viewer-graph-service": "git+https://github.com/spinalcom/Spinal-Graph-Service.git",
-    "spinal-model-bmsnetwork": "git+https://github.com/spinalcom/spinal-model-bmsnetwork.git",
-    "spinal-model-opcua": "git+https://github.com/spinalcom/spinal-model-opcua.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "browserify": {
-    "transform": [
-      "vueify",
-      "babelify",
-      "imgurify"
-    ]
-  }
+	"name": "spinal-env-viewer-plugin-opcua-manager",
+	"version": "1.1.5",
+	"description": "",
+	"main": "src/index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"dependencies": {
+		"@syncfusion/ej2-vue-grids": "^24.2.3",
+		"@syncfusion/ej2-vue-navigations": "^24.2.4",
+		"lodash": "^4.17.20",
+		"spinal-connector-service": "git+https://github.com/spinalcom/spinal-connector-service.git",
+		"spinal-env-viewer-context-menu-service": "git+https://github.com/spinalcom/spinal-env-viewer-context-menu-service.git",
+		"spinal-env-viewer-graph-service": "git+https://github.com/spinalcom/Spinal-Graph-Service.git",
+		"spinal-model-bmsnetwork": "git+https://github.com/spinalcom/spinal-model-bmsnetwork.git",
+		"spinal-model-opcua": "git+https://github.com/spinalcom/spinal-model-opcua.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"browserify": {
+		"transform": [
+			"vueify",
+			"babelify",
+			"imgurify"
+		]
+	}
 }

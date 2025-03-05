@@ -93,8 +93,8 @@ export default {
       isLoading: false,
       serverInfo: {
         name: "WBOX",
-        gateways: [{ id: 0, ip: "172.29.32.43", port: 26543, endpoint: "" }]
-        // ip: "172.29.32.43",
+        gateways: [{ id: 0, address: "172.29.32.43", port: 26543, endpoint: "" }]
+        // address: "172.29.32.43",
         // port: 26543,
         // endpoint: ""
       },
@@ -170,7 +170,7 @@ export default {
     addGateway() {
       console.log("add gateway")
       const id = this.serverInfo.gateways[0].id + 1;
-      this.serverInfo.gateways = [{ id, ip: "", port: "", endpoint: "" }, ...this.serverInfo.gateways];
+      this.serverInfo.gateways = [{ id, address: "", port: "", endpoint: "" }, ...this.serverInfo.gateways];
     },
 
     removeGateway(item) {
@@ -224,7 +224,7 @@ export default {
     // discover
 
     async createNewSpinalDiscover() {
-      this.serverInfo.gateways = this.serverInfo.gateways.filter(el => el.ip.trim().length > 0 && el.ip.toString().trim().length > 0);
+      this.serverInfo.gateways = this.serverInfo.gateways.filter(el => el.address.trim().length > 0 && el.address.toString().trim().length > 0);
 
       this.spinalDiscover = new SpinalOPCUADiscoverModel(this.graph, this.context, this.organ, this.serverInfo);
       this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.readyToDiscover);
@@ -241,7 +241,8 @@ export default {
     },
 
     async goToDiscovered() {
-      this.treeFields = await this.spinalDiscover.getTreeDiscovered();
+      const tree = await this.spinalDiscover.getTreeDiscovered();
+      this.treeFields = [tree];
       this.state = OPCUA_ORGAN_STATES.discovered;
     },
 
@@ -305,7 +306,7 @@ export default {
     async createNodes() {
       this.state = OPCUA_ORGAN_STATES.creating;
       const treeSelected = await this.getTreeSelected();
-
+      console.log("treeSelected", treeSelected);
       await this.spinalDiscover.setTreeToCreate(treeSelected);
       this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.readyToCreate);
 
@@ -321,20 +322,33 @@ export default {
     },
 
     getTreeSelected() {
-      const treeCopy = JSON.parse(JSON.stringify(this.treeFields));
-      return this.filterTree(treeCopy, this.checkedNodes);
+      const treeCopy = JSON.parse(JSON.stringify(this.treeFields[0]));
+      const obj = this.convertTreeSelectedToObj();
+
+      return this.filterTree(treeCopy, obj);
+
+
+      // const promises = treeCopy.children.map(el => this.filterTree(el, obj));
+      // return Promise.all(promises).then((result) => {
+      //   const children = result.filter(Boolean);
+      //   treeCopy.children = children;
+      //   return treeCopy;
+      // })
+    },
+
+    convertTreeSelectedToObj() {
+      return this.checkedNodes.reduce((o, id) => {
+        o[id] = id;
+        return o;
+      }, {})
     },
 
     async filterTree(tree, nodeSelected) {
-      if (nodeSelected.includes(tree.nodeId)) return tree;
+      if (nodeSelected[tree.nodeId]) return tree;
 
-      const promises = tree.children.map((child) =>
-        this.filterTree(child, nodeSelected)
-      );
+      const promises = tree.children.map((child) => this.filterTree(child, nodeSelected));
 
-      const childrenFiltered = await Promise.all(promises).then((result) => {
-        return result.filter(Boolean);
-      });
+      const childrenFiltered = await Promise.all(promises).then((result) => result.filter(Boolean));
 
       if (childrenFiltered.length > 0) {
         const copy = Object.assign({}, tree);
@@ -343,65 +357,9 @@ export default {
       } else {
         return null;
       }
-
-      //   const tree = {
-      //     displayName: this.treeFields.displayName,
-      //     nodeId: this.treeFields.nodeId,
-      //   };
-
-      //   const allNodesObj = {
-      //     [tree.nodeId]: tree,
-      //   };
-      //   await this.convertToObj(
-      //     this.treeFields.children,
-      //     this.treeFields.nodeId,
-      //     allNodesObj
-      //   );
-
-      //   const _nodesTreated = {};
-
-      //   for (const id of this.checkedNodes) {
-      //     addNodeToTree(id);
-      //   }
-
-      //   return tree;
-
-      //   function addNodeToTree(nodeId) {
-
-      //     // if (!nodeId || _nodesTreated[nodeId]) return;
-
-      //     // const node = allNodesObj[nodeId];
-      //     // if (!node) return;
-
-      //     // if (!node.children) node.children = [];
-      //     // _nodesTreated[nodeId] = node;
-
-      //     // const parentId = node.parentId;
-      //     // const parent = _nodesTreated[parentId] || allNodesObj[parentId];
-      //     // if (parent && _nodesTreated[parentId]) {
-      //     //   _nodesTreated[parentId].children.push(node);
-      //     //   return;
-      //     // }
-
-      //     // if (parent && !_nodesTreated[parentId]) {
-      //     //   parent.children = [node];
-      //     //   _nodesTreated[parentId] = parent;
-      //     //   addNodeToTree(parent.parentId);
-      //     // }
-      //   }
     },
 
     // creation end
-
-    // disableServerInfoBtn() {
-    //   if (
-    //     this.serverInfo.name.trim().length == 0 ||
-    //     this.serverInfo.ip.trim().length == 0 ||
-    //     this.serverInfo.port.toString().length == 0
-    //   )
-    //     return true;
-    //   return false;
-    // },
 
     formatTree(tree, parentId) {
       return tree.reduce((list, item) => {

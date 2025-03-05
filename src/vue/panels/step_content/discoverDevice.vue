@@ -13,7 +13,7 @@
         <div class="discovered_state" v-else-if="state === STATES.discovered">
             <div class="control_wrapper">
                 <v-treeview dark selectable open-on-click hoverable transition item-text="displayName" item-key="nodeId"
-                    selected-color="primary" v-model="checkedNodes" :items="treeFields.children">
+                    selected-color="primary" v-model="checkedNodes" :items="treeFields">
                 </v-treeview>
             </div>
 
