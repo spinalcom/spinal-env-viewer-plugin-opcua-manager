@@ -6,7 +6,12 @@
         </div>
 
         <div class="discovering_state" v-else-if="state === STATES.discovering">
-            <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
+            <!-- <md-progress-spinner md-mode="indeterminate"></md-progress-spinner> -->
+            <md-progress-bar style="width: 100%" md-mode="determinate" :md-value="percent"></md-progress-bar>
+            <div class="md-layout md-gutter progress_info">
+                <div class="md-layout-item md-alignment-center">Gateway discovered : {{ progress.finished }}</div>
+                <div class="md-layout-item md-alignment-center">Gateway failed : {{ progress.failed }}</div>
+            </div>
             <md-button class="md-raised md-accent" @click="cancelDiscovering"> Cancel </md-button>
         </div>
 
@@ -61,7 +66,8 @@ export default {
         stepName: { required: true },
         state: { required: true },
         treeFields: { required: true },
-        asking: { required: false, default: false }
+        asking: { required: false, default: false },
+        progress: { required: false, default: () => ({ total: 0, finished: 0, failed: 0 }) }
     },
     data() {
         this.STATES = OPCUA_ORGAN_STATES;
@@ -97,6 +103,11 @@ export default {
         askResult(useResult) {
             this.$emit("askResult", useResult);
         }
+    },
+    computed: {
+        percent() {
+            return this.progress.total === 0 ? 0 : ((this.progress.finished + this.progress.failed) / this.progress.total) * 100;
+        }
     }
 }
 </script>
@@ -105,5 +116,10 @@ export default {
 .error_content {
     display: flex;
     align-items: center;
+}
+
+.progress_info {
+    width: 100% !important;
+    margin: 10px;
 }
 </style>

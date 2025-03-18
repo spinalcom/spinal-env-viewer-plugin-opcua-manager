@@ -31,7 +31,7 @@
 
         <discover-step :stepName="STEPS.discovering" :state="state" :treeFields="treeFields" @discover="goToDiscovering"
           @nextStep="goToCreationStep" @goBack="goBack" @cancel="cancelDiscovering" @retry="retry" :asking="ask"
-          @askResult="ConfirmChoice" />
+          @askResult="ConfirmChoice" :progress="discoverProgress" />
 
       </md-step>
 
@@ -82,6 +82,7 @@ export default {
 
     this.STEPS = STEPS;
     this.processBind = null;
+    this.progressBindProcess = null;
 
     return {
       step: this.STEPS.serverInfo,
@@ -98,6 +99,11 @@ export default {
         // port: 26543,
         // endpoint: ""
       },
+      discoverProgress: {
+        total: 0,
+        finished: 0,
+        failed: 0
+      }
     };
   },
   methods: {
@@ -236,7 +242,7 @@ export default {
     async goToDiscovering() {
       this.state = OPCUA_ORGAN_STATES.discovering;
       await this.createNewSpinalDiscover();
-
+      this.bindDiscoverProgress();
       this.bindDiscoverState();
     },
 
@@ -254,6 +260,14 @@ export default {
     retry() {
       this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.discovering);
       this.state = OPCUA_ORGAN_STATES.discovering;
+    },
+
+    bindDiscoverProgress() {
+      // bind is executed on init and on progress change
+      this.progressBindProcess = this.spinalDiscover.progress.bind(async () => {
+        const progress = this.spinalDiscover.progress.get();
+        this.discoverProgress = progress;
+      }, true);
     },
 
     bindDiscoverState() {
@@ -285,10 +299,12 @@ export default {
     async resetSpinalDiscover() {
       if (this.spinalDiscover) {
         if (this.processBind) this.spinalDiscover.state.unbind(this.processBind);
+        if (this.progressBindProcess) this.spinalDiscover.state.unbind(this.progressBindProcess);
         await this.spinalDiscover.removeFromGraph();
 
         this.spinalDiscover = null;
         this.processBind = null;
+        this.progressBindProcess = null;
       }
 
     },
