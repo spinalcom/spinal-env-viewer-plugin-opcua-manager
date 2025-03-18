@@ -25,13 +25,21 @@
 
       </md-step> -->
 
-      <!-- Step 3 -->
-      <md-step :id="getId(STEPS.discovering)" md-label="Discovering" md-description="select the nodes to create"
+      <!-- Step 2 -->
+      <md-step :id="getId(STEPS.discovering)" md-label="Discovering" md-description="Launch the discovery"
         :md-editable="false" :md-done="step > STEPS.discovering">
 
-        <discover-step :stepName="STEPS.discovering" :state="state" :treeFields="treeFields" @discover="goToDiscovering"
-          @nextStep="goToCreationStep" @goBack="goBack" @cancel="cancelDiscovering" @retry="retry" :asking="ask"
-          @askResult="ConfirmChoice" :progress="discoverProgress" />
+        <discover-step :stepName="STEPS.discovering" :state="state" @discover="goToDiscovering" @nextStep="nextStep"
+          @goBack="goBack" @cancel="cancelDiscovering" @retry="retry" :asking="ask" @askResult="ConfirmChoice"
+          :progress="discoverProgress" />
+      </md-step>
+
+      <!-- Step 3 -->
+      <md-step :id="getId(STEPS.discovered)" md-label="Discovered" md-description="select the nodes to create"
+        :md-editable="false" :md-done="step > STEPS.discovered">
+
+        <select-to-create :stepName="STEPS.discovered" :state="state" :treeFields="treeFields"
+          @nextStep="goToCreationStep" @goBack="goBack" />
 
       </md-step>
 
@@ -52,6 +60,7 @@ import ServerInfoStep from "./step_content/server_info.vue";
 import EntryPointStep from "./step_content/selectEntryPoint.vue";
 import DiscoverStep from "./step_content/discoverDevice.vue";
 import CreateNodeStep from "./step_content/createNodes.vue";
+import SelectToCreate from "./step_content/selectToCreate.vue";
 import { OPCUA_ORGAN_STATES, SpinalOPCUADiscoverModel } from "spinal-model-opcua";
 import spinalExcelManager from "spinal-env-viewer-plugin-excel-manager-service";
 
@@ -60,7 +69,8 @@ const STEPS = Object.freeze({
   serverInfo: "1",
   // selectEntryPoint: "2",
   discovering: "2",
-  creation: "3",
+  discovered: "3",
+  creation: "4",
 });
 
 export default {
@@ -69,7 +79,8 @@ export default {
     "server-info-step": ServerInfoStep,
     "entry-point-step": EntryPointStep,
     "discover-step": DiscoverStep,
-    "create-node-step": CreateNodeStep
+    "create-node-step": CreateNodeStep,
+    "select-to-create": SelectToCreate
   },
   data() {
     this.STATES = OPCUA_ORGAN_STATES;
@@ -94,10 +105,7 @@ export default {
       isLoading: false,
       serverInfo: {
         name: "WBOX",
-        gateways: [{ id: 0, address: "172.29.32.43", port: 26543, endpoint: "" }]
-        // address: "172.29.32.43",
-        // port: 26543,
-        // endpoint: ""
+        gateways: [{ id: 0, address: "172.29.32.46", port: "26543", endpoint: "" }]
       },
       discoverProgress: {
         total: 0,
@@ -112,7 +120,7 @@ export default {
       this.context = context;
       this.organ = await organ.getElement(true);
 
-      if (serverInfo) this.serverInfo = serverInfo;
+      if (serverInfo && serverInfo.name) this.serverInfo.name = serverInfo.name;
 
       this.initialized();
     },
@@ -148,6 +156,7 @@ export default {
         case this.STEPS.serverInfo:
         case this.STEPS.selectEntryPoint:
         case this.STEPS.discovering:
+        case this.STEPS.discovered:
           this.step = (Number(step) + 1).toString();
           break;
       }
@@ -156,13 +165,14 @@ export default {
     goBack(step) {
       switch (step) {
         case this.STEPS.discovering:
+        case this.STEPS.discovered:
         case this.STEPS.selectEntryPoint:
         case this.STEPS.creation:
           this.step = (Number(step) - 1).toString();
           break;
       }
 
-      if (this.spinalDiscover) {
+      if (this.spinalDiscover && step !== this.STEPS.creation) {
         this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.cancelled);
         this.state = OPCUA_ORGAN_STATES.initial;
       }
@@ -174,7 +184,6 @@ export default {
     // server info
 
     addGateway() {
-      console.log("add gateway")
       const id = this.serverInfo.gateways[0].id + 1;
       this.serverInfo.gateways = [{ id, address: "", port: "", endpoint: "" }, ...this.serverInfo.gateways];
     },
@@ -416,8 +425,8 @@ export default {
     },
   },
 
-  beforeDestroy() {
-    this.spinalDiscover.remove(this.graph);
+  async beforeDestroy() {
+    await this.spinalDiscover.remove(this.graph);
   },
 };
 </script>
@@ -433,7 +442,7 @@ export default {
 
   .stepper_container {
     width: 100%;
-    height: calc(100% - 30px);
+    height: calc(100% - 60px);
     background: transparent !important;
 
     .form {

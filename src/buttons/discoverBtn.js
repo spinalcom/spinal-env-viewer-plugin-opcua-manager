@@ -39,10 +39,10 @@ class DiscoverOPCUABtn extends SpinalContextApp {
         let serverInfo;
         let organ = SpinalGraphService.getRealNode(option.selectedNode.id.get());
 
-        if(typeSelected === SpinalBmsNetwork.nodeTypeName) {
+        if (typeSelected === SpinalBmsNetwork.nodeTypeName) {
             const id = option.selectedNode.id.get();
             const contextId = option.context.id.get();
-            serverInfo = option.selectedNode.serverInfo && option.selectedNode.serverInfo.get();
+            serverInfo = { name: option.selectedNode.name.get() }
             organ = await utilities.getOrgan(id, contextId);
         }
 

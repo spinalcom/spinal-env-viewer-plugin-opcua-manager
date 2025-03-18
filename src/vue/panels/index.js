@@ -12,7 +12,7 @@ const panels = [
         vueMountComponent: Vue.extend(DiscoverNetworkPanel),
         panel: {
             title: "Discover OPCUA network",
-            closeBehaviour: "hide",
+            closeBehaviour: "destroy", // hide pour cacher le panel, [n'importe quoi] pour detruire le panel
         },
         style: {
             minWidth: '600px',
@@ -25,7 +25,7 @@ const panels = [
         vueMountComponent: Vue.extend(MonitorNetworkPanel),
         panel: {
             title: "Monitor network",
-            closeBehaviour: "hide",
+            closeBehaviour: "destroy", // hide pour cacher le panel, [n'importe quoi] pour detruire le panel
         },
         style: {
             minWidth: '600px',

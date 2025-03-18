@@ -6,7 +6,6 @@
         </div>
 
         <div class="discovering_state" v-else-if="state === STATES.discovering">
-            <!-- <md-progress-spinner md-mode="indeterminate"></md-progress-spinner> -->
             <md-progress-bar style="width: 100%" md-mode="determinate" :md-value="percent"></md-progress-bar>
             <div class="md-layout md-gutter progress_info">
                 <div class="md-layout-item md-alignment-center">Gateway discovered : {{ progress.finished }}</div>
@@ -15,19 +14,6 @@
             <md-button class="md-raised md-accent" @click="cancelDiscovering"> Cancel </md-button>
         </div>
 
-        <div class="discovered_state" v-else-if="state === STATES.discovered">
-            <div class="control_wrapper">
-                <v-treeview dark selectable open-on-click hoverable transition item-text="displayName" item-key="nodeId"
-                    selected-color="primary" v-model="checkedNodes" :items="treeFields">
-                </v-treeview>
-            </div>
-
-            <div>
-                <md-button class="md-raised md-primary" @click="nextStep"
-                    :disabled="checkedNodes.length === 0">Next</md-button>
-                <md-button class="md-raised md-accent" @click="goBack"> Back </md-button>
-            </div>
-        </div>
 
         <div v-else-if="state === STATES.error">
             <div class="error_content">
@@ -47,7 +33,6 @@
         </div>
 
 
-        <!-- <div class="disocered_content"></div> -->
     </div>
 </template>
 
@@ -65,7 +50,6 @@ export default {
     props: {
         stepName: { required: true },
         state: { required: true },
-        treeFields: { required: true },
         asking: { required: false, default: false },
         progress: { required: false, default: () => ({ total: 0, finished: 0, failed: 0 }) }
     },
@@ -85,7 +69,7 @@ export default {
         },
 
         nextStep() {
-            this.$emit("nextStep", { stepName: this.stepName, checkedNodes: this.checkedNodes });
+            this.$emit("nextStep", this.stepName);
         },
 
         goBack() {
@@ -102,6 +86,13 @@ export default {
 
         askResult(useResult) {
             this.$emit("askResult", useResult);
+        }
+    },
+    watch: {
+        state(newVal) {
+            if (newVal === OPCUA_ORGAN_STATES.discovered) {
+                this.nextStep();
+            }
         }
     },
     computed: {
