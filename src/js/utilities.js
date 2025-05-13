@@ -51,8 +51,10 @@ export default class Utils {
         
         if (!node.belongsToContext(context)) return;
 
-        const organs = await SpinalGraphService.getChildrenInContext(contextId, contextId);
-
+        let organs = await SpinalGraphService.getChildrenInContext(contextId, contextId);
+        organs = organs.filter((el) => {
+            return el.type.get() === OPCUA_ORGAN_TYPE;
+        });
         for (const organ of organs) {
             const exist = await this.existInTree(contextId, organ.id.get(), networkId);
             if (exist) return SpinalGraphService.getRealNode(organ.id.get());
@@ -118,20 +120,11 @@ export default class Utils {
     }
 
     static async existInTree(contextId, startId, nodeToFindId) {
-        let queue = await SpinalGraphService.getChildrenInContext(startId, contextId)
-        let exist = false;
-
-        while (queue.length > 0 && !exist) {
-            let found = queue.find((el) => el.id.get() === nodeToFindId);
-            if (found) exist = true;
-            else {
-                const promises = queue.map(el => SpinalGraphService.getChildrenInContext(el.id.get(), contextId));
-                const children = await Promise.all(promises);
-                queue = children.flat();
-            }
-        }
-
-        return exist
+        const node = SpinalGraphService.getRealNode(nodeToFindId);
+        const relations = [SpinalBmsDevice.relationName, SpinalBmsEndpoint.relationName, SpinalBmsNetwork.relationName];
+        return node.findOneParent(relations, (parent) => {
+            return parent.getId().get() === startId;
+        })
     }
 
     static browseEndpoints(node, context, callback) {
