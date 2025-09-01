@@ -132,7 +132,8 @@ export default {
       if (!profile) return;
 
       let model = new SpinalOPCUAListener(this.graph, this.context, this.organ, this.network, node, profile, true);
-      await model.addToDevice();
+      // await model.addToDevice();
+      await model.addToGraph();
 
       this.listeners[deviceId] = model;
       if (!globalUpdate) this.updateInterface()
