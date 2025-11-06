@@ -11,4 +11,4 @@ export * from "./configProfilBtn";
 export * from "./generateProfileBtn";
 export * from "./linkProfileToDeviceBtn";
 export * from "./monitoringBtn";
-export * from "./createSubnetworkBtn";
+export * from "./createSubnetwork";

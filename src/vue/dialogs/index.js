@@ -6,7 +6,7 @@ import { CONFIG_MONITORING_PROFILE_DIALOG, GENERATE_PROFILE_DIALOG, LINK_PROFILE
 import ConfigProfileDialog from "./configProfileDialog.vue";
 import GenerateProfileDialog from "./generateProfileDialog.vue";
 import LinkDeviceToProfile from "./linkProfileToDevice.vue";
-import CreateSubNetworkDialogInOpcua from "./createSubNetworkDialogInOpcua.vue";
+import CreateSubNetworkDialogInOpcua from "./createSubNetwork.vue";
 
 const dialogs = [
     {
