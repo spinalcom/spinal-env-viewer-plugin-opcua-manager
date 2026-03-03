@@ -67,6 +67,8 @@ import { SpinalBmsDevice, SpinalBmsNetwork } from 'spinal-model-bmsnetwork';
 import { SPINAL_RELATION_PTR_LST_TYPE } from "spinal-model-graph";
 import opcuaProfileService, { CONTEXT_TO_PROFILE_RELATION } from '../../js/profile_service';
 import * as lodash from "lodash"
+import { Pbr } from "spinal-core-connectorjs_type";
+
 
 export default {
   name: MONITORING_PANEL_NAME,
@@ -120,29 +122,38 @@ export default {
 
     async start(deviceId, globalUpdate) {
       const listener = this.listeners[deviceId];
+      const node = this.nodes[deviceId];
+      const profile = await opcuaProfileService.getProfileLinked(node);
+
       if (listener) {
         listener.monitored.set(true);
+
+        // update profile in case it has changed
+        listener.rem_attr("profile");
+        listener.add_attr({ profile: new Pbr(profile) });
+
+
+
         if (!globalUpdate) this.updateInterface()
         return;
       }
 
-      const node = this.nodes[deviceId];
-      const profile = await opcuaProfileService.getProfileLinked(node);
+
 
       if (!profile) return;
 
       let model = new SpinalOPCUAListener(this.graph, this.context, this.organ, this.network, node, profile, true);
-      await model.addToDevice();
+      await model.addToGraph();
 
       this.listeners[deviceId] = model;
-      if (!globalUpdate) this.updateInterface()
+      if (!globalUpdate) this.updateInterface();
     },
 
     stop(deviceId, globalUpdate) {
       const listener = this.listeners[deviceId];
 
       if (listener) {
-        if (!globalUpdate) this.updateInterface()
+        if (!globalUpdate) this.updateInterface();
         listener.monitored.set(false);
       }
 

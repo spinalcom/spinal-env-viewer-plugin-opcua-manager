@@ -118,7 +118,7 @@ export default {
     async opened({ graph, context, organ, serverInfo }) {
       this.graph = graph;
       this.context = context;
-      this.organ = await organ.getElement(true);
+      this.organ = organ;
 
       if (serverInfo && serverInfo.name) this.serverInfo.name = serverInfo.name;
 
