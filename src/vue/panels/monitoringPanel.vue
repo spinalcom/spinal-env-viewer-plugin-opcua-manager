@@ -159,16 +159,10 @@ export default {
 
     },
 
-    restart(deviceId, globalUpdate) {
-      return new Promise(async (resolve) => {
-        await this.stop(deviceId, globalUpdate);
-
-        setTimeout(async () => {
-          await this.start(deviceId, globalUpdate);
-          resolve(true);
-        }, 1000);
-      });
-
+    async restart(deviceId, globalUpdate) {
+      await this.stop(deviceId, globalUpdate);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.start(deviceId, globalUpdate);
     },
 
     async getDevices(selectedNode) {
@@ -280,7 +274,6 @@ export default {
     },
 
     getTimeSeriesValue(deviceId) {
-      console.log("getting value")
       const listener = this.listeners[deviceId];
       if (!listener) return false;
 

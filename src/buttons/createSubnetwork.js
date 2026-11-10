@@ -1,9 +1,7 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
-import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 import { OPCUA_ORGAN_TYPE } from "spinal-model-opcua";
-import { CREATE_SUBNETWORK_DIALOG_IN_OPCUA } from "../js/constants"
-const SIDEBAR = "GraphManagerSideBar";
+import { CREATE_SUBNETWORK_DIALOG_IN_OPCUA, SIDEBAR } from "../js/constants";
 
 
 class CreateSubNetworkBtn extends SpinalContextApp {

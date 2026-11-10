@@ -60,6 +60,7 @@ class OPCUAProfileService {
 
             return;
         })
+        return Promise.all(promises);
 
     }
 
@@ -91,9 +92,7 @@ class OPCUAProfileService {
         if (!name) name = deviceNode.getName().get();
 
         const endpoints = [];
-            
         await Utils.browseEndpoints(deviceNode, context, (n) => endpoints.push(n.info.get()));
-        console.log("endpoints", endpoints)
         return this.createProfile(name, endpoints);      
     }
 
@@ -198,6 +197,15 @@ class OPCUAProfileService {
         const promises = itemsNodes.map(node => intervalNode.removeChild(node, INTERVAL_TO_ITEM, SPINAL_RELATION_PTR_LST_TYPE));
 
         return Promise.all(promises);
+    }
+
+    async removeIntervalFromProfile(profile, intervalNode) {
+        if (!this.context) await this.init();
+        const supervisionNode = await this.getSupervisionNode(profile);
+        if (!supervisionNode) throw new Error("Profile has no supervision node");
+
+        await supervisionNode.removeChild(intervalNode, SUPERVISION_TO_INTERVAL, SPINAL_RELATION_PTR_LST_TYPE);
+        profile.info.indirectModificationDate.set(Date.now());
     }
 
 

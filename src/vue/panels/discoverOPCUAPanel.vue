@@ -105,7 +105,7 @@ export default {
       isLoading: false,
       serverInfo: {
         name: "WBOX",
-        gateways: [{ id: 0, address: "172.29.32.46", port: "26543", endpoint: "" }]
+        gateways: [{ id: 0, address: "172.29.32.46", port: "26543", endpoint: "", entryPoint: "", useLastResult: false }]
       },
       discoverProgress: {
         total: 0,
@@ -185,7 +185,7 @@ export default {
 
     addGateway() {
       const id = this.serverInfo.gateways[0].id + 1;
-      this.serverInfo.gateways = [{ id, address: "", port: "", endpoint: "" }, ...this.serverInfo.gateways];
+      this.serverInfo.gateways = [{ id, address: "", port: "", endpoint: "", entryPoint: "", useLastResult: false }, ...this.serverInfo.gateways];
     },
 
     removeGateway(item) {
@@ -206,8 +206,7 @@ export default {
           const file = event.target.files[0];
           const ips = await this.convertFileDataToJson(file);
           this.serverInfo.gateways = ips.map((el, index) => {
-            el.id = index;
-            return el;
+            return { ...el, id: index, entryPoint: el.entryPoint || "", useLastResult: false };
           });
 
           this.isLoading = false;
@@ -239,9 +238,15 @@ export default {
     // discover
 
     async createNewSpinalDiscover() {
-      this.serverInfo.gateways = this.serverInfo.gateways.filter(el => el.address.trim().length > 0 && el.address.toString().trim().length > 0);
+      const serverInfo = {
+        ...this.serverInfo,
+        gateways: this.serverInfo.gateways.filter(el =>
+          String(el.address || "").trim().length > 0 &&
+          String(el.port || "").trim().length > 0
+        )
+      };
 
-      this.spinalDiscover = new SpinalOPCUADiscoverModel(this.graph, this.context, this.organ, this.serverInfo);
+      this.spinalDiscover = new SpinalOPCUADiscoverModel(this.graph, this.context, this.organ, serverInfo);
       this.spinalDiscover.changeState(OPCUA_ORGAN_STATES.readyToDiscover);
 
       await this.spinalDiscover.addToGraph();
@@ -308,7 +313,7 @@ export default {
     async resetSpinalDiscover() {
       if (this.spinalDiscover) {
         if (this.processBind) this.spinalDiscover.state.unbind(this.processBind);
-        if (this.progressBindProcess) this.spinalDiscover.state.unbind(this.progressBindProcess);
+        if (this.progressBindProcess) this.spinalDiscover.progress.unbind(this.progressBindProcess);
         await this.spinalDiscover.removeFromGraph();
 
         this.spinalDiscover = null;

@@ -1,5 +1,5 @@
 import { SpinalBmsDevice, SpinalBmsEndpoint, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
-import { SpinalGraph, SpinalGraphService } from "spinal-env-viewer-graph-service";
+import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { OPCUA_ORGAN_TYPE } from "spinal-model-opcua/dist/constants";
 
 
@@ -128,21 +128,13 @@ export default class Utils {
     }
 
     static browseEndpoints(node, context, callback) {
-        let endpoints = [];
-        
-        try {
-           return node.findInContext(context, (n) => {
-               if (n.getType().get() === SpinalBmsEndpoint.nodeTypeName) {
-                    if (typeof callback === "function") callback(n);
-                    endpoints.push(n);
-                    return true;
-                }
+        return node.findInContext(context, (n) => {
+            if (n.getType().get() === SpinalBmsEndpoint.nodeTypeName) {
+                if (typeof callback === "function") callback(n);
+                return true;
+            }
 
-                return false;
-            }) 
-        } catch (error) {
-            return endpoints;
-        }
-               
+            return false;
+        });
     }
 }

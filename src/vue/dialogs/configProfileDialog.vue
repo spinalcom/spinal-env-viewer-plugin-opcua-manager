@@ -110,7 +110,6 @@
 
 <script>
 import { CONFIG_MONITORING_PROFILE_DIALOG } from "../../js/constants";
-import { SpinalBmsEndpoint } from "spinal-model-bmsnetwork";
 import AddIntervalDialog from "./addIntervalDialog.vue";
 import opcuaProfileService from '../../js/profile_service';
 import * as lodash from "lodash";
@@ -247,8 +246,8 @@ export default {
 
     addInterval(data) {
       const interval = Number(data.value);
-      if (!isNaN(interval)) {
-        const found = this.intervalsList.find((el) => el.name == interval);
+      if (Number.isFinite(interval)) {
+        const found = this.intervalsList.find((el) => Number(el.value) === interval);
         if (!found) this.intervalsList = [...this.intervalsList, data];
       }
 
@@ -323,13 +322,25 @@ export default {
 
       const { toAdd, toRemove } = this.getEndpointsModifications();
       const intervalsModifications = this.getIntervalModifications();
+      const currentIntervalIds = new Set(
+        this.intervalsList
+          .map(interval => interval.id)
+          .filter(id => id !== undefined && id !== null)
+          .map(String)
+      );
+      const removedIntervals = Object.entries(this.old_intervals)
+        .filter(([id]) => !currentIntervalIds.has(id))
+        .map(([, interval]) => interval.node);
 
-      const promises1 = intervalsModifications.map(el => {
+      const promises1 = removedIntervals.map(intervalNode =>
+        opcuaProfileService.removeIntervalFromProfile(this.selectedNode, intervalNode)
+      );
+      promises1.push(...intervalsModifications.map(el => {
         const intervalNode = this.spinalNodesObjects[el.id];
         if (!intervalNode) return opcuaProfileService.addIntervalToProfile(this.selectedNode, el, el.toAdd);
 
         return Promise.all([opcuaProfileService.addItemsToInterval(intervalNode, el.toAdd), opcuaProfileService.removeItemsFromInterval(intervalNode, el.toRemove)])
-      })
+      }));
 
       const promises2 = [
         opcuaProfileService.addItemToList(this.selectedNode, toAdd),
