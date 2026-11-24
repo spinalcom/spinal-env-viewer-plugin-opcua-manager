@@ -6,7 +6,8 @@
         :md-editable="false" :md-done="step > STEPS.serverInfo">
 
         <server-info-step :serverInfo="serverInfo" :stepName="STEPS.serverInfo" @nextStep="nextStep"
-          @addGateway="addGateway" @removeGateway="removeGateway" @upload="uploadGateways" :loading="isLoading" />
+          @addGateway="addGateway" @removeGateway="removeGateway" @upload="uploadGateways" @reset="resetServerInfo"
+          :loading="isLoading" />
       </md-step>
 
       <!-- Step 2 -->
@@ -105,7 +106,7 @@ export default {
       isLoading: false,
       serverInfo: {
         name: "WBOX",
-        gateways: [{ id: 0, address: "172.29.32.46", port: "26543", endpoint: "", entryPoint: "", useLastResult: false }]
+        gateways: [{ id: 0, address: "", port: "", endpoint: "", entryPoint: "", useLastResult: false }]
       },
       discoverProgress: {
         total: 0,
@@ -179,6 +180,10 @@ export default {
 
     },
 
+    resetServerInfo() {
+      this.serverInfo.gateways = [{ id: 0, address: "", port: "", endpoint: "", entryPoint: "", useLastResult: false }];
+    },
+
     //step end
 
     // server info
@@ -206,7 +211,7 @@ export default {
           const file = event.target.files[0];
           const ips = await this.convertFileDataToJson(file);
           this.serverInfo.gateways = ips.map((el, index) => {
-            return { ...el, id: index, entryPoint: el.entryPoint || "", useLastResult: false };
+            return { ...el, id: index, entryPoint: el.entryPoint || "", useLastResult: el.useLastResult };
           });
 
           this.isLoading = false;
@@ -221,13 +226,52 @@ export default {
     async convertFileDataToJson(file) {
       const dataJson = await spinalExcelManager.convertExcelToJson(file);
       const ips = [];
+      const fieldAliases = {
+        address: ["address", "ip", "ip address", "host", "hostname", "server ip", "server address"],
+        port: ["port", "server port"],
+        endpoint: ["endpoint", "endpoint url", "opcua endpoint", "opc ua endpoint", "url"],
+        entryPoint: ["entry point", "entry point path", "entryPointPath", "entryPoint", "entryPath", "entry path"],
+        useLastResult: ["use last result", "use last result if exists", "last result", "reuse last result"]
+      };
+
+      const normalizeHeader = header => String(header).trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+
       let index = 0;
       for (const key in dataJson) {
         if (Object.hasOwnProperty.call(dataJson, key)) {
           const values = dataJson[key];
           for (const item of values) {
-            item.id = index;
-            ips.push(item);
+            const normalizedValues = Object.create(null);
+            for (const itemKey of Object.keys(item)) {
+              const normalizedKey = normalizeHeader(itemKey);
+              if (!Object.prototype.hasOwnProperty.call(normalizedValues, normalizedKey)) {
+                normalizedValues[normalizedKey] = item[itemKey];
+              }
+            }
+
+            const getField = field => {
+              for (const alias of fieldAliases[field]) {
+                const normalizedAlias = normalizeHeader(alias);
+                const value = normalizedValues[normalizedAlias];
+                if (value != null && value !== "") return value;
+              }
+              return undefined;
+            };
+            const address = getField("address");
+            const port = getField("port");
+            const endpoint = getField("endpoint");
+            const entryPoint = getField("entryPoint");
+            const useLastResult = getField("useLastResult");
+
+            ips.push({
+              ...item,
+              id: index,
+              address: address == null ? "" : address,
+              port: port == null ? "" : port,
+              endpoint: endpoint == null ? "" : endpoint,
+              entryPoint: entryPoint == null ? "" : entryPoint,
+              useLastResult: useLastResult == null ? false : useLastResult == "true" || useLastResult == "1"
+            });
             index++;
           }
         }

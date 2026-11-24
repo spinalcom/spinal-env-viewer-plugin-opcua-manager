@@ -14,6 +14,10 @@
                     <md-button class="md-dense md-primary" @click="upload">
                         upload gateways excel file
                     </md-button>
+
+                    <md-button class="md-dense md-accent" @click="reset">
+                        Reset
+                    </md-button>
                 </div>
                 <div class="ips_container">
                     <div class="gateway_entry" v-for="item in serverInfo.gateways" :key="item.id">
@@ -98,6 +102,10 @@ export default {
 
         upload() {
             this.$emit("upload");
+        },
+
+        reset() {
+            this.$emit("reset");
         }
     },
     computed: {
